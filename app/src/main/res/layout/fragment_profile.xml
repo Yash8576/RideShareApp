@@ -1,6 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/white">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Top logo + name section (outside scroll view) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:id="@+id/profile_logo"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_profile"
+            android:contentDescription="Profile Logo" />
+
+        <TextView
+            android:id="@+id/profile_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Name"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingStart="16dp"
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+
+    <!-- Scrollable buttons area -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/button_my_rides"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="My Rides"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/button_complaint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Raise a Complaint"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/button_about"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="About Us"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/button_logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Logout" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
