@@ -45,9 +45,15 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Placeholder for Raise a Complaint
-        btnComplaint.setOnClickListener(v ->
-                Toast.makeText(getActivity(), "Raise a Complaint clicked", Toast.LENGTH_SHORT).show());
+        // Navigate to Raise A Complaint Fragment
+        btnComplaint.setOnClickListener(v -> {
+            Fragment complaintFragment = new RaiseAComplaintFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, complaintFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         // Navigate to About Us Fragment
         btnAbout.setOnClickListener(v -> {
@@ -59,9 +65,10 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Placeholder for Logout
-        btnLogout.setOnClickListener(v ->
-                Toast.makeText(getActivity(), "Logout clicked", Toast.LENGTH_SHORT).show());
+        // Show toast on logout
+        btnLogout.setOnClickListener(v -> {
+            Toast.makeText(getContext(), "Logout clicked", Toast.LENGTH_SHORT).show();
+        });
 
         return view;
     }
