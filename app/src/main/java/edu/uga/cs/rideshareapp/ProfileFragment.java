@@ -35,13 +35,21 @@ public class ProfileFragment extends Fragment {
         // Set name or image dynamically if needed
         profileName.setText("John Doe");
 
-        // Button click actions
-        btnMyRides.setOnClickListener(v ->
-                Toast.makeText(getActivity(), "My Rides clicked", Toast.LENGTH_SHORT).show());
+        // Navigate to My Rides Fragment
+        btnMyRides.setOnClickListener(v -> {
+            Fragment myRidesFragment = new MyRidesFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, myRidesFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
+        // Placeholder for Raise a Complaint
         btnComplaint.setOnClickListener(v ->
                 Toast.makeText(getActivity(), "Raise a Complaint clicked", Toast.LENGTH_SHORT).show());
 
+        // Navigate to About Us Fragment
         btnAbout.setOnClickListener(v -> {
             Fragment aboutUsFragment = new AboutUsFragment();
             requireActivity().getSupportFragmentManager()
@@ -51,6 +59,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
+        // Placeholder for Logout
         btnLogout.setOnClickListener(v ->
                 Toast.makeText(getActivity(), "Logout clicked", Toast.LENGTH_SHORT).show());
 
