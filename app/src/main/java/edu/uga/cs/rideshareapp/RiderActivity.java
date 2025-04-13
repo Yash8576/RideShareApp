@@ -23,9 +23,10 @@ public class RiderActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rider);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back arrow
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // hides title if you want
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // hide title
         }
 
         bottomNavigationView = findViewById(R.id.bottom_navigation2);
@@ -41,10 +42,7 @@ public class RiderActivity extends AppCompatActivity {
                     }
                 });
 
-        // Load the default fragment
-        loadFragment(new RequestsFragment());
-
-        // Set listener for bottom navigation
+        // Handle bottom nav selection
         bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -67,6 +65,9 @@ public class RiderActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        // ✅ Set default selected tab — this will trigger onNavigationItemSelected
+        bottomNavigationView.setSelectedItemId(R.id.nav_rides);
     }
 
     @Override
@@ -93,14 +94,14 @@ public class RiderActivity extends AppCompatActivity {
         // Find the TextView inside the custom layout
         TextView coinCount = actionView.findViewById(R.id.coin_count);
 
-        // Set default or dynamic value (you'll update this later)
+        // Set default or dynamic value
         coinCount.setText("100");
 
-        // Optional: handle click if needed
+        // Optional click handler for coin icon
         actionView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Optionally show a toast or open coin history
+                // Future: open coin history or show toast
             }
         });
 

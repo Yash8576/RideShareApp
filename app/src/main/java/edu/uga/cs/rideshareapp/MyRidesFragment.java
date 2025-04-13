@@ -24,12 +24,12 @@ public class MyRidesFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.recycler_my_rides);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<Ride> rides = new ArrayList<>();
-        rides.add(new Ride("Athens", "Atlanta", "2025-04-12", "10:30 AM", "Pending", "+50 Coins"));
-        rides.add(new Ride("UGA", "Airport", "2025-04-13", "08:00 AM", "Confirmed", "+50 Coins"));
-        rides.add(new Ride("Downtown", "Campus", "2025-04-14", "01:15 PM", "Pending", "+50 Coins"));
+        List<MyRide> myRides = new ArrayList<>();
+        myRides.add(new MyRide("Athens", "Atlanta", "2025-04-12", "10:30 AM", "Pending", "+50 Coins"));
+        myRides.add(new MyRide("UGA", "Airport", "2025-04-13", "08:00 AM", "Confirmed", "+50 Coins"));
+        myRides.add(new MyRide("Downtown", "Campus", "2025-04-14", "01:15 PM", "Pending", "+50 Coins"));
 
-        RideAdapter adapter = new RideAdapter(rides);
+        MyRideAdapter adapter = new MyRideAdapter(myRides);
         recyclerView.setAdapter(adapter);
 
         return view;
