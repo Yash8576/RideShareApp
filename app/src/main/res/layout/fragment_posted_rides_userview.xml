@@ -1,14 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".PostedRidesUserViewFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- Empty State View -->
+    <include
+        android:id="@+id/emptyStateLayout"
+        layout="@layout/fragment_post_ride"
+        android:visibility="visible" />
+
+    <!-- RecyclerView for posted rides -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPostedRides"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:visibility="gone"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        tools:listitem="@layout/item_posted_rides" />
 
-</FrameLayout>
+    <!-- FAB to post a ride -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabPostRide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="Post a Ride"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@android:color/holo_red_light" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
