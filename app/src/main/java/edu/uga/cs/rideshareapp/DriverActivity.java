@@ -54,7 +54,7 @@ public class DriverActivity extends AppCompatActivity {
                 if (itemId == R.id.nav_requests) {
                     fragment = new RequestsFragment();
                 } else if (itemId == R.id.nav_post_ride) {
-                    fragment = new PostRideFragment();
+                    fragment = new PostedRidesUserViewFragment();
                 } else if (itemId == R.id.nav_profile) {
                     fragment = new ProfileFragment();
                 }

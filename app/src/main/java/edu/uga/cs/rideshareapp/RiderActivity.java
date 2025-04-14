@@ -52,7 +52,7 @@ public class RiderActivity extends AppCompatActivity {
                 if (itemId == R.id.nav_rides) {
                     fragment = new RidesFragment();
                 } else if (itemId == R.id.nav_post_request) {
-                    fragment = new PostRequestFragment();
+                    fragment = new PostedRidesUserViewFragment();
                 } else if (itemId == R.id.nav_profile) {
                     fragment = new ProfileFragment();
                 }

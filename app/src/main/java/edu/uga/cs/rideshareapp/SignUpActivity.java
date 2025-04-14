@@ -19,12 +19,13 @@ public class SignUpActivity extends AppCompatActivity {
 
         // signup to selection screen navigation
 
-//        signupButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent intent = new Intent(SignUpActivity.this,SelectionActivity.class);
-//            }
-//        });
+        signupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(SignUpActivity.this,SelectionActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
 }

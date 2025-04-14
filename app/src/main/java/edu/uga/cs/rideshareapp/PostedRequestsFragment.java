@@ -18,30 +18,30 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PostedRidesUserViewFragment extends Fragment {
+public class PostedRequestsFragment extends Fragment {
 
-    private List<Ride> rideList = new ArrayList<>();
+    private List<Ride> requestList = new ArrayList<>();
     private PostedRideAdapter adapter;
     private RecyclerView recyclerView;
     private View emptyStateLayout;
 
-    public PostedRidesUserViewFragment() {
+    public PostedRequestsFragment() {
         // Required empty public constructor
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_posted_rides_userview, container, false);
+        View view = inflater.inflate(R.layout.fragment_posted_requests_userview, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerViewPostedRides);
         emptyStateLayout = view.findViewById(R.id.emptyStateLayout);
-        FloatingActionButton fab = view.findViewById(R.id.fabPostRide);
+        FloatingActionButton fab = view.findViewById(R.id.fabPostReq);
 
-        adapter = new PostedRideAdapter(rideList, position -> {
-            rideList.remove(position);
+        adapter = new PostedRideAdapter(requestList, position -> {
+            requestList.remove(position);
             adapter.notifyItemRemoved(position);
-            adapter.notifyItemRangeChanged(position, rideList.size());
+            adapter.notifyItemRangeChanged(position, requestList.size());
             updateViewVisibility();
         });
 
@@ -51,40 +51,45 @@ public class PostedRidesUserViewFragment extends Fragment {
         updateViewVisibility();
 
         fab.setOnClickListener(v -> {
-            View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_post_ride, null);
+            View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_post_request, null);
             BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
             bottomSheetDialog.setContentView(bottomSheetView);
             bottomSheetDialog.show();
 
-            Button postButton = bottomSheetDialog.findViewById(R.id.buttonPostRide);
-            Button cancelButton = bottomSheetDialog.findViewById(R.id.buttonCancelRide);
+            Button postButton = bottomSheetDialog.findViewById(R.id.buttonPostrequest);
+            Button cancelButton = bottomSheetDialog.findViewById(R.id.buttonCancelrequest);
 
             postButton.setOnClickListener(btn -> {
                 String from = ((EditText) bottomSheetDialog.findViewById(R.id.fromLocation)).getText().toString();
                 String to = ((EditText) bottomSheetDialog.findViewById(R.id.toLocation)).getText().toString();
                 String dateTime = ((EditText) bottomSheetDialog.findViewById(R.id.dateTime)).getText().toString();
+                String notes = ((EditText) bottomSheetDialog.findViewById(R.id.notes)).getText().toString();
 
                 if (from.isEmpty() || to.isEmpty() || dateTime.isEmpty()) {
                     Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Ride newRide = new Ride("From: " + from + " → To: " + to, "Date: " + dateTime, "Notes: None");
-                rideList.add(newRide);
-                adapter.notifyItemInserted(rideList.size() - 1);
+                Ride request = new Ride(
+                        "From: " + from + " → To: " + to,
+                        "Date: " + dateTime,
+                        "Notes: " + (notes.isEmpty() ? "None" : notes)
+                );
 
+                requestList.add(request);
+                adapter.notifyItemInserted(requestList.size() - 1);
                 bottomSheetDialog.dismiss();
                 updateViewVisibility();
             });
 
-            cancelButton.setOnClickListener(cancel -> bottomSheetDialog.dismiss());
+            cancelButton.setOnClickListener(btn -> bottomSheetDialog.dismiss());
         });
 
         return view;
     }
 
     private void updateViewVisibility() {
-        if (rideList.isEmpty()) {
+        if (requestList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             emptyStateLayout.setVisibility(View.VISIBLE);
         } else {

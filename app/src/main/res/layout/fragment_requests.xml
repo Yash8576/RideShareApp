@@ -11,6 +11,5 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:padding="8dp"
-        tools:listitem="@layout/item_request" />
-
+        tools:listitem="@layout/item_posted_requested" />
 </FrameLayout>
