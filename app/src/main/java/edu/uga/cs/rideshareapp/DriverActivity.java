@@ -17,20 +17,28 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class DriverActivity extends AppCompatActivity {
 
-    BottomNavigationView bottomNavigationView;
+    private BottomNavigationView bottomNavigationView;
+
+    // Fragments
+    private final Fragment requestsFragment = new RequestsFragment();
+    private final Fragment ridesFragment = new PostedRidesUserViewFragment();
+    private final Fragment profileFragment = new ProfileFragment();
+
+    private Fragment currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back arrow
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // hides title if you want
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // hides title
         }
 
         bottomNavigationView = findViewById(R.id.bottom_navigation1);
 
-        // Handle safe area (bottom padding for nav bar)
+        // Handle safe area padding for gesture navigation
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView,
                 new OnApplyWindowInsetsListener() {
                     @Override
@@ -41,26 +49,35 @@ public class DriverActivity extends AppCompatActivity {
                     }
                 });
 
-        // Load the default fragment
-        loadFragment(new RequestsFragment());
+        // Add fragments once and hide the others
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, profileFragment, "Profile").hide(profileFragment)
+                .add(R.id.fragment_container, ridesFragment, "Rides").hide(ridesFragment)
+                .add(R.id.fragment_container, requestsFragment, "Requests")
+                .commit();
 
-        // Set listener for bottom navigation
+        currentFragment = requestsFragment;
+
         bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment fragment = null;
+                Fragment selectedFragment = null;
 
                 int itemId = item.getItemId();
                 if (itemId == R.id.nav_requests) {
-                    fragment = new RequestsFragment();
+                    selectedFragment = requestsFragment;
                 } else if (itemId == R.id.nav_post_ride) {
-                    fragment = new PostedRidesUserViewFragment();
+                    selectedFragment = ridesFragment;
                 } else if (itemId == R.id.nav_profile) {
-                    fragment = new ProfileFragment();
+                    selectedFragment = profileFragment;
                 }
 
-                if (fragment != null) {
-                    loadFragment(fragment);
+                if (selectedFragment != null && selectedFragment != currentFragment) {
+                    getSupportFragmentManager().beginTransaction()
+                            .hide(currentFragment)
+                            .show(selectedFragment)
+                            .commit();
+                    currentFragment = selectedFragment;
                     return true;
                 }
 
@@ -71,15 +88,8 @@ public class DriverActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed(); // handles back navigation
+        onBackPressed();
         return true;
-    }
-
-    private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
     }
 
     @Override
@@ -93,15 +103,11 @@ public class DriverActivity extends AppCompatActivity {
         // Find the TextView inside the custom layout
         TextView coinCount = actionView.findViewById(R.id.coin_count);
 
-        // Set default or dynamic value (you'll update this later)
+        // Set default or dynamic value
         coinCount.setText("100");
 
-        // Optional: handle click if needed
-        actionView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Optionally show a toast or open coin history
-            }
+        actionView.setOnClickListener(v -> {
+            // Optional: Show toast or navigate to coin history
         });
 
         return true;

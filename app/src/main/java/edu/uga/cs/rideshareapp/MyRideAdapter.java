@@ -22,7 +22,7 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     @Override
     public RideViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.ride_item, parent, false);
+                .inflate(R.layout.item_myride, parent, false);
         return new RideViewHolder(view);
     }
 
