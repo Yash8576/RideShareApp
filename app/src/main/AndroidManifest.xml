@@ -17,7 +17,7 @@
 
         <!-- ✅ Login Activity as the launcher -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,11 +26,11 @@
         </activity>
 
         <!-- Other activities -->
-        <activity android:name=".SignUpActivity" />
-        <activity android:name=".MainActivity" />
-        <activity android:name=".SelectionActivity" />
-        <activity android:name=".DriverActivity" />
-        <activity android:name=".RiderActivity" />
+        <activity android:name=".activities.SignUpActivity" />
+        <activity android:name=".activities.MainActivity" />
+        <activity android:name=".activities.SelectionActivity" />
+        <activity android:name=".activities.DriverActivity" />
+        <activity android:name=".activities.RiderActivity" />
 
     </application>
 

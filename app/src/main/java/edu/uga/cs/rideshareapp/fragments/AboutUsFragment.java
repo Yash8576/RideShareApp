@@ -1,10 +1,12 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
+
+import edu.uga.cs.rideshareapp.R;
 
 public class AboutUsFragment extends Fragment {
 

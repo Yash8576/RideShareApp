@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.fragments;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
@@ -20,6 +20,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import edu.uga.cs.rideshareapp.adapters.PostedRideAdapter;
+import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.models.Ride;
 
 public class PostedRidesUserViewFragment extends Fragment {
 

@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
+import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.models.Ride;
 
 public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdapter.RequestViewHolder> {
 

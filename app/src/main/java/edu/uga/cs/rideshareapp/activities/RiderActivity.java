@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.activities;
 
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,30 +15,28 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class DriverActivity extends AppCompatActivity {
+import edu.uga.cs.rideshareapp.fragments.PostedRidesUserViewFragment;
+import edu.uga.cs.rideshareapp.fragments.ProfileFragment;
+import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.fragments.RidesFragment;
 
-    private BottomNavigationView bottomNavigationView;
+public class RiderActivity extends AppCompatActivity {
 
-    // Fragments
-    private final Fragment requestsFragment = new RequestsFragment();
-    private final Fragment ridesFragment = new PostedRidesUserViewFragment();
-    private final Fragment profileFragment = new ProfileFragment();
-
-    private Fragment currentFragment;
+    BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_driver);
+        setContentView(R.layout.activity_rider);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back arrow
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // hides title
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // hide title
         }
 
-        bottomNavigationView = findViewById(R.id.bottom_navigation1);
+        bottomNavigationView = findViewById(R.id.bottom_navigation2);
 
-        // Handle safe area padding for gesture navigation
+        // Handle safe area (bottom padding for nav bar)
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView,
                 new OnApplyWindowInsetsListener() {
                     @Override
@@ -49,47 +47,45 @@ public class DriverActivity extends AppCompatActivity {
                     }
                 });
 
-        // Add fragments once and hide the others
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, profileFragment, "Profile").hide(profileFragment)
-                .add(R.id.fragment_container, ridesFragment, "Rides").hide(ridesFragment)
-                .add(R.id.fragment_container, requestsFragment, "Requests")
-                .commit();
-
-        currentFragment = requestsFragment;
-
+        // Handle bottom nav selection
         bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
+                Fragment fragment = null;
 
                 int itemId = item.getItemId();
-                if (itemId == R.id.nav_requests) {
-                    selectedFragment = requestsFragment;
-                } else if (itemId == R.id.nav_post_ride) {
-                    selectedFragment = ridesFragment;
+                if (itemId == R.id.nav_rides) {
+                    fragment = new RidesFragment();
+                } else if (itemId == R.id.nav_post_request) {
+                    fragment = new PostedRidesUserViewFragment();
                 } else if (itemId == R.id.nav_profile) {
-                    selectedFragment = profileFragment;
+                    fragment = new ProfileFragment();
                 }
 
-                if (selectedFragment != null && selectedFragment != currentFragment) {
-                    getSupportFragmentManager().beginTransaction()
-                            .hide(currentFragment)
-                            .show(selectedFragment)
-                            .commit();
-                    currentFragment = selectedFragment;
+                if (fragment != null) {
+                    loadFragment(fragment);
                     return true;
                 }
 
                 return false;
             }
         });
+
+        // ✅ Set default selected tab — this will trigger onNavigationItemSelected
+        bottomNavigationView.setSelectedItemId(R.id.nav_rides);
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        onBackPressed(); // handles back navigation
         return true;
+    }
+
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     @Override
@@ -106,8 +102,12 @@ public class DriverActivity extends AppCompatActivity {
         // Set default or dynamic value
         coinCount.setText("100");
 
-        actionView.setOnClickListener(v -> {
-            // Optional: Show toast or navigate to coin history
+        // Optional click handler for coin icon
+        actionView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Future: open coin history or show toast
+            }
         });
 
         return true;

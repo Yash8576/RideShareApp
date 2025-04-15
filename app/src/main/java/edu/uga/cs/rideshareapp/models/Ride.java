@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.models;
 
 public class Ride {
     public String fromTo;

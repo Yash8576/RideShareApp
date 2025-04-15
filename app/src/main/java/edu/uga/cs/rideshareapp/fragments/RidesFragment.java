@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +11,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.models.Ride;
+import edu.uga.cs.rideshareapp.adapters.RideAdapter;
 
 public class RidesFragment extends Fragment {
 

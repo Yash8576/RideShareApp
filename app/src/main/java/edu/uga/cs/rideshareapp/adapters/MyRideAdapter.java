@@ -1,4 +1,4 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
+
+import edu.uga.cs.rideshareapp.models.MyRide;
+import edu.uga.cs.rideshareapp.R;
 
 public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHolder> {
 

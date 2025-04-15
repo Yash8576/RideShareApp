@@ -1,5 +1,6 @@
-package edu.uga.cs.rideshareapp;
+package edu.uga.cs.rideshareapp.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.activities.LoginActivity;
 
 public class ProfileFragment extends Fragment {
 
@@ -32,10 +39,19 @@ public class ProfileFragment extends Fragment {
         Button btnAbout = view.findViewById(R.id.button_about);
         Button btnLogout = view.findViewById(R.id.button_logout);
 
-        // Set name or image dynamically if needed
-        profileName.setText("John Doe");
+        // 🔐 Set username from Firebase (email without @uga.edu)
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String email = user.getEmail(); // e.g., alex@uga.edu
+            if (email != null && email.endsWith("@uga.edu")) {
+                String username = email.replace("@uga.edu", ""); // e.g., alex
+                profileName.setText(username);
+            } else {
+                profileName.setText("User");
+            }
+        }
 
-        // Navigate to My Rides Fragment
+        // 👉 My Rides
         btnMyRides.setOnClickListener(v -> {
             Fragment myRidesFragment = new MyRidesFragment();
             requireActivity().getSupportFragmentManager()
@@ -45,7 +61,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Navigate to Raise A Complaint Fragment
+        // 👉 Raise A Complaint
         btnComplaint.setOnClickListener(v -> {
             Fragment complaintFragment = new RaiseAComplaintFragment();
             requireActivity().getSupportFragmentManager()
@@ -55,7 +71,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Navigate to About Us Fragment
+        // 👉 About Us
         btnAbout.setOnClickListener(v -> {
             Fragment aboutUsFragment = new AboutUsFragment();
             requireActivity().getSupportFragmentManager()
@@ -65,9 +81,13 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        // Show toast on logout
+        // 🚪 Logout
         btnLogout.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Logout clicked", Toast.LENGTH_SHORT).show();
+
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
         });
 
         return view;
