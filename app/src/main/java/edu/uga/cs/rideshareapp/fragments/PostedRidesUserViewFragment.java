@@ -1,6 +1,7 @@
 package edu.uga.cs.rideshareapp.fragments;
 
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,119 +9,153 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import edu.uga.cs.rideshareapp.adapters.PostedRideAdapter;
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.PostedRideAdapter;
 import edu.uga.cs.rideshareapp.models.Ride;
 
 public class PostedRidesUserViewFragment extends Fragment {
 
-    private List<Ride> rideList = new ArrayList<>();
-    private PostedRideAdapter adapter;
     private RecyclerView recyclerView;
-    private View emptyStateLayout;
+    private PostedRideAdapter adapter;
+    private List<Ride> rideList = new ArrayList<>();
 
-    public PostedRidesUserViewFragment() {
-        // Required empty public constructor
-    }
+    public PostedRidesUserViewFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_posted_rides_userview, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerViewPostedRides);
-        emptyStateLayout = view.findViewById(R.id.emptyStateLayout);
-        FloatingActionButton fab = view.findViewById(R.id.fabPostRide);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         adapter = new PostedRideAdapter(rideList, position -> {
-            rideList.remove(position);
-            adapter.notifyItemRemoved(position);
-            adapter.notifyItemRangeChanged(position, rideList.size());
-            updateViewVisibility();
+            // Cancel functionality (optional)
         });
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
+        loadPostedRides();
 
-        updateViewVisibility();
-
-        fab.setOnClickListener(v -> {
-            View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_post_ride, null);
-            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
-            bottomSheetDialog.setContentView(bottomSheetView);
-            bottomSheetDialog.show();
-
-            EditText fromField = bottomSheetDialog.findViewById(R.id.fromLocation);
-            EditText toField = bottomSheetDialog.findViewById(R.id.toLocation);
-            EditText dateTimeField = bottomSheetDialog.findViewById(R.id.dateTime);
-            Button postButton = bottomSheetDialog.findViewById(R.id.buttonPostRide);
-            Button cancelButton = bottomSheetDialog.findViewById(R.id.buttonCancelRide);
-
-            // 🗓 Setup Date Picker on click
-            if (dateTimeField != null) {
-                dateTimeField.setFocusable(false);
-                dateTimeField.setClickable(true);
-                dateTimeField.setOnClickListener(v1 -> {
-                    Calendar calendar = Calendar.getInstance();
-                    DatePickerDialog datePickerDialog = new DatePickerDialog(
-                            requireContext(),
-                            (DatePicker view1, int year, int month, int dayOfMonth) -> {
-                                String formattedDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth);
-                                dateTimeField.setText(formattedDate);
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                    );
-                    datePickerDialog.getDatePicker().setCalendarViewShown(false); // Spinner style
-                    datePickerDialog.show();
-                });
-            }
-
-            postButton.setOnClickListener(btn -> {
-                String from = fromField.getText().toString();
-                String to = toField.getText().toString();
-                String dateTime = dateTimeField.getText().toString();
-
-                if (from.isEmpty() || to.isEmpty() || dateTime.isEmpty()) {
-                    Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                Ride newRide = new Ride("From: " + from + " → To: " + to, "Date: " + dateTime, "Notes: None");
-                rideList.add(newRide);
-                adapter.notifyItemInserted(rideList.size() - 1);
-
-                bottomSheetDialog.dismiss();
-                updateViewVisibility();
-            });
-
-            cancelButton.setOnClickListener(cancel -> bottomSheetDialog.dismiss());
-        });
+        FloatingActionButton fab = view.findViewById(R.id.fabPostRide);
+        fab.setOnClickListener(v -> showBottomSheet());
 
         return view;
     }
 
-    private void updateViewVisibility() {
-        if (rideList.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
-            emptyStateLayout.setVisibility(View.VISIBLE);
-        } else {
-            recyclerView.setVisibility(View.VISIBLE);
-            emptyStateLayout.setVisibility(View.GONE);
-        }
+    private void loadPostedRides() {
+        FirebaseDatabase.getInstance().getReference("ride_offers")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        rideList.clear();
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Ride ride = snap.getValue(Ride.class);
+                            if (ride != null) {
+                                rideList.add(ride);
+                            }
+                        }
+                        adapter.notifyDataSetChanged();
+
+                        // ✅ SHOW/HIDE EMPTY STATE
+                        if (rideList.isEmpty()) {
+                            recyclerView.setVisibility(View.GONE);
+                            if (getView() != null) {
+                                View emptyState = getView().findViewById(R.id.emptyStateLayout);
+                                if (emptyState != null) emptyState.setVisibility(View.VISIBLE);
+                            }
+                        } else {
+                            recyclerView.setVisibility(View.VISIBLE);
+                            if (getView() != null) {
+                                View emptyState = getView().findViewById(R.id.emptyStateLayout);
+                                if (emptyState != null) emptyState.setVisibility(View.GONE);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(getContext(), "Failed to load rides", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showBottomSheet() {
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_post_ride, null);
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        dialog.setContentView(sheetView);
+        dialog.show();
+
+        EditText from = sheetView.findViewById(R.id.fromLocation);
+        EditText to = sheetView.findViewById(R.id.toLocation);
+        EditText date = sheetView.findViewById(R.id.date);
+        EditText time = sheetView.findViewById(R.id.time);
+        Button post = sheetView.findViewById(R.id.buttonPostRide);
+        Button cancel = sheetView.findViewById(R.id.buttonCancelRide);
+
+        // Date Picker
+        date.setFocusable(false);
+        date.setClickable(true);
+        date.setOnClickListener(v -> {
+            Calendar c = Calendar.getInstance();
+            new DatePickerDialog(requireContext(), (DatePicker view, int y, int m, int d) -> {
+                date.setText(String.format("%04d-%02d-%02d", y, m + 1, d));
+            }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        // Time Picker
+        time.setFocusable(false);
+        time.setClickable(true);
+        time.setOnClickListener(v -> {
+            Calendar c = Calendar.getInstance();
+            new TimePickerDialog(requireContext(), (TimePicker view, int h, int m) -> {
+                time.setText(String.format("%02d:%02d", h, m));
+            }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false).show();
+        });
+
+        // Submit to Firebase
+        post.setOnClickListener(v -> {
+            String f = from.getText().toString().trim();
+            String t = to.getText().toString().trim();
+            String d = date.getText().toString().trim();
+            String ti = time.getText().toString().trim();
+
+            if (f.isEmpty() || t.isEmpty() || d.isEmpty() || ti.isEmpty()) {
+                Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Ride ride = new Ride(f, t, d, ti);
+
+            FirebaseDatabase.getInstance().getReference("ride_offers")
+                    .push()
+                    .setValue(ride)
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(getContext(), "Ride offer posted!", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        cancel.setOnClickListener(v -> dialog.dismiss());
     }
 }

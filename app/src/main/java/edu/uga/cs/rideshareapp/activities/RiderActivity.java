@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import edu.uga.cs.rideshareapp.fragments.PostedRequestsUserViewFragment;
 import edu.uga.cs.rideshareapp.fragments.PostedRidesUserViewFragment;
 import edu.uga.cs.rideshareapp.fragments.ProfileFragment;
 import edu.uga.cs.rideshareapp.R;
@@ -57,7 +58,7 @@ public class RiderActivity extends AppCompatActivity {
                 if (itemId == R.id.nav_rides) {
                     fragment = new RidesFragment();
                 } else if (itemId == R.id.nav_post_request) {
-                    fragment = new PostedRidesUserViewFragment();
+                    fragment = new PostedRequestsUserViewFragment();
                 } else if (itemId == R.id.nav_profile) {
                     fragment = new ProfileFragment();
                 }

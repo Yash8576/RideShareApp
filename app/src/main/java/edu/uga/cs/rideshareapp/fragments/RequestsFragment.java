@@ -4,45 +4,69 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uga.cs.rideshareapp.adapters.PostedRequestAdapter;
 import edu.uga.cs.rideshareapp.R;
-import edu.uga.cs.rideshareapp.models.Ride;
+import edu.uga.cs.rideshareapp.adapters.RequestAdapter;
+import edu.uga.cs.rideshareapp.models.Request;
 
 public class RequestsFragment extends Fragment {
 
-    private PostedRequestAdapter adapter;
+    private RecyclerView recyclerView;
+    private RequestAdapter adapter;
+    private List<Request> requestList = new ArrayList<>();
 
     public RequestsFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_requests, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_requests, container, false);
+    }
 
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewRequests);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        recyclerView = view.findViewById(R.id.recyclerViewRequests);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<Ride> requestList = new ArrayList<>();
-        requestList.add(new Ride("From: UGA Campus → To: Downtown", "Date: April 14, 2025 – 3:00 PM", "Notes: Be on time"));
-        requestList.add(new Ride("From: Bus Stop → To: Main Library", "Date: April 15, 2025 – 9:15 AM", "Notes: Quiet ride preferred"));
-        requestList.add(new Ride("From: Science Hall → To: Ramsey", "Date: April 16, 2025 – 5:45 PM", "Notes: Will bring pet"));
-
-        adapter = new PostedRequestAdapter(requestList, position -> {
-            requestList.remove(position);
-            adapter.notifyItemRemoved(position);
-            adapter.notifyItemRangeChanged(position, requestList.size());
-        });
-
+        adapter = new RequestAdapter(requestList);
         recyclerView.setAdapter(adapter);
 
-        return view;
+        loadRequestsFromFirebase();
+    }
+
+    private void loadRequestsFromFirebase() {
+        FirebaseDatabase.getInstance().getReference("ride_requests")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        requestList.clear();
+                        for (DataSnapshot child : snapshot.getChildren()) {
+                            Request request = child.getValue(Request.class);
+                            if (request != null) {
+                                requestList.add(request);
+                            }
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(getContext(), "Failed to load ride requests", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

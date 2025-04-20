@@ -1,5 +1,6 @@
 package edu.uga.cs.rideshareapp.fragments;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,25 +34,27 @@ public class ProfileFragment extends Fragment {
         ImageView profileLogo = view.findViewById(R.id.profile_logo);
         TextView profileName = view.findViewById(R.id.profile_name);
 
-        // Scrollable buttons
+        // Buttons
         Button btnMyRides = view.findViewById(R.id.button_my_rides);
         Button btnComplaint = view.findViewById(R.id.button_complaint);
         Button btnAbout = view.findViewById(R.id.button_about);
+        Button btnResetPassword = view.findViewById(R.id.reset_password_button);
         Button btnLogout = view.findViewById(R.id.button_logout);
+        Button btnRemoveAccount = view.findViewById(R.id.remove_acc_button);
 
-        // 🔐 Set username from Firebase (email without @uga.edu)
+        // 🔐 Show username without @uga.edu
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            String email = user.getEmail(); // e.g., alex@uga.edu
+            String email = user.getEmail();
             if (email != null && email.endsWith("@uga.edu")) {
-                String username = email.replace("@uga.edu", ""); // e.g., alex
+                String username = email.replace("@uga.edu", "");
                 profileName.setText(username);
             } else {
                 profileName.setText("User");
             }
         }
 
-        // 👉 My Rides
+        // 👉 Navigate to My Rides
         btnMyRides.setOnClickListener(v -> {
             Fragment myRidesFragment = new MyRidesFragment();
             requireActivity().getSupportFragmentManager()
@@ -81,13 +84,66 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
+        // 🔁 Reset Password
+        btnResetPassword.setOnClickListener(v -> {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                String email = currentUser.getEmail();
+                if (email != null && !email.isEmpty()) {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Reset Password")
+                            .setMessage("We'll send a password reset link to " + email + ". Continue?")
+                            .setPositiveButton("Send", (dialog, which) -> {
+                                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(getContext(), "Reset email sent to " + email, Toast.LENGTH_LONG).show();
+                                            } else {
+                                                Toast.makeText(getContext(), "Failed to send reset email. Try again later.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                } else {
+                    Toast.makeText(getContext(), "No email found for this user.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(getContext(), "User not logged in.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // 🚪 Logout
         btnLogout.setOnClickListener(v -> {
-
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(getActivity(), LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
+        });
+
+        // ❌ Delete Account
+        btnRemoveAccount.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Remove Account")
+                    .setMessage("Are you sure you want to permanently delete your account?")
+                    .setPositiveButton("Yes, Delete", (dialog, which) -> {
+                        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                        if (currentUser != null) {
+                            currentUser.delete()
+                                    .addOnCompleteListener(task -> {
+                                        if (task.isSuccessful()) {
+                                            Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(getActivity(), LoginActivity.class);
+                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                            startActivity(intent);
+                                        } else {
+                                            Toast.makeText(getContext(), "Failed to delete account. Please re-login and try again.", Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
 
         return view;

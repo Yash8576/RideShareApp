@@ -14,7 +14,7 @@ import java.util.List;
 import edu.uga.cs.rideshareapp.R;
 import edu.uga.cs.rideshareapp.models.Ride;
 
-public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.PostedRideViewHolder> {
+public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.RideViewHolder> {
 
     public interface OnRideCancelListener {
         void onRideCancelled(int position);
@@ -30,18 +30,19 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Po
 
     @NonNull
     @Override
-    public PostedRideViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RideViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_posted_rides, parent, false);
-        return new PostedRideViewHolder(view);
+        return new RideViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PostedRideViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RideViewHolder holder, int position) {
         Ride ride = rideList.get(position);
-        holder.textFromTo.setText(ride.fromTo);
-        holder.textDateTime.setText(ride.dateTime);
-        holder.textNotes.setText(ride.notes);
+        holder.fromText.setText("From: " + ride.from);
+        holder.toText.setText("To: " + ride.to);
+        holder.dateText.setText("Date: " + ride.date);
+        holder.timeText.setText("Time: " + ride.time);
 
         holder.cancelButton.setOnClickListener(v -> cancelListener.onRideCancelled(position));
     }
@@ -51,15 +52,16 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Po
         return rideList.size();
     }
 
-    public static class PostedRideViewHolder extends RecyclerView.ViewHolder {
-        TextView textFromTo, textDateTime, textNotes;
+    public static class RideViewHolder extends RecyclerView.ViewHolder {
+        TextView fromText, toText, dateText, timeText;
         Button cancelButton;
 
-        public PostedRideViewHolder(@NonNull View itemView) {
+        public RideViewHolder(@NonNull View itemView) {
             super(itemView);
-            textFromTo = itemView.findViewById(R.id.textViewFromTo);
-            textDateTime = itemView.findViewById(R.id.textViewDateTime);
-            textNotes = itemView.findViewById(R.id.textViewNotes);
+            fromText = itemView.findViewById(R.id.textViewFrom);
+            toText = itemView.findViewById(R.id.textViewTo);
+            dateText = itemView.findViewById(R.id.textViewDate);
+            timeText = itemView.findViewById(R.id.textViewTime);
             cancelButton = itemView.findViewById(R.id.buttonCancel);
         }
     }

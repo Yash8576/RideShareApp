@@ -7,7 +7,7 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
-    <!-- Top logo + name section (outside scroll view) -->
+    <!-- Top logo + name section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,7 +33,7 @@
             android:textColor="@android:color/black"/>
     </LinearLayout>
 
-    <!-- Scrollable buttons area -->
+    <!-- Scrollable buttons section -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -42,35 +42,61 @@
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:divider="?android:attr/listDivider"
+            android:showDividers="middle"
+            android:dividerPadding="8dp">
 
             <Button
                 android:id="@+id/button_my_rides"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="My Rides"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginVertical="8dp"
+                android:textAllCaps="false" />
 
             <Button
                 android:id="@+id/button_complaint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Raise a Complaint"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginVertical="8dp"
+                android:textAllCaps="false" />
 
             <Button
                 android:id="@+id/button_about"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="About Us"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginVertical="8dp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/reset_password_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset Password"
+                android:layout_marginVertical="8dp"
+                android:textAllCaps="false" />
+
+            <!-- Spacer -->
 
             <Button
                 android:id="@+id/button_logout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Logout" />
+                android:layout_marginBottom="8dp"
+                android:text="Logout"
+                android:textAllCaps="false"
+                android:textColor="@color/white" />
 
+            <Button
+                android:id="@+id/remove_acc_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Remove Account"
+                android:textAllCaps="false"
+                android:textColor="@color/white" />
         </LinearLayout>
     </ScrollView>
 

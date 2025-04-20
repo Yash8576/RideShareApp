@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import edu.uga.cs.rideshareapp.R;
-import edu.uga.cs.rideshareapp.models.Ride;
+import edu.uga.cs.rideshareapp.models.Request;
 
 public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdapter.RequestViewHolder> {
 
@@ -20,10 +20,10 @@ public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdap
         void onRequestCancelled(int position);
     }
 
-    private final List<Ride> requestList;
+    private final List<Request> requestList;
     private final OnRequestCancelListener cancelListener;
 
-    public PostedRequestAdapter(List<Ride> requestList, OnRequestCancelListener cancelListener) {
+    public PostedRequestAdapter(List<Request> requestList, OnRequestCancelListener cancelListener) {
         this.requestList = requestList;
         this.cancelListener = cancelListener;
     }
@@ -31,19 +31,19 @@ public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdap
     @NonNull
     @Override
     public RequestViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_posted_requested, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_posted_requested, parent, false);
         return new RequestViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RequestViewHolder holder, int position) {
-        Ride request = requestList.get(position);
-        holder.textFromTo.setText(request.fromTo);
-        holder.textDateTime.setText(request.dateTime);
-        holder.textNotes.setText(request.notes);
+        Request request = requestList.get(position);
+        holder.fromText.setText("From: " + request.from);
+        holder.toText.setText("To: " + request.to);
+        holder.dateText.setText("Date: " + request.date);
+        holder.timeText.setText("Time: " + request.time);
 
-        holder.cancelButton.setOnClickListener(v -> cancelListener.onRequestCancelled(position));
+        holder.cancelBtn.setOnClickListener(v -> cancelListener.onRequestCancelled(position));
     }
 
     @Override
@@ -52,15 +52,16 @@ public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdap
     }
 
     public static class RequestViewHolder extends RecyclerView.ViewHolder {
-        TextView textFromTo, textDateTime, textNotes;
-        Button cancelButton;
+        TextView fromText, toText, dateText, timeText;
+        Button cancelBtn;
 
         public RequestViewHolder(@NonNull View itemView) {
             super(itemView);
-            textFromTo = itemView.findViewById(R.id.textViewFromTo);
-            textDateTime = itemView.findViewById(R.id.textViewDateTime);
-            textNotes = itemView.findViewById(R.id.textViewNotes);
-            cancelButton = itemView.findViewById(R.id.buttonCancel);
+            fromText = itemView.findViewById(R.id.textViewFrom);
+            toText = itemView.findViewById(R.id.textViewTo);
+            dateText = itemView.findViewById(R.id.textViewDate);
+            timeText = itemView.findViewById(R.id.textViewTime);
+            cancelBtn = itemView.findViewById(R.id.buttonCancel);
         }
     }
 }

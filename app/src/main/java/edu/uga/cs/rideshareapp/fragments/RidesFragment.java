@@ -4,19 +4,30 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.uga.cs.rideshareapp.R;
-import edu.uga.cs.rideshareapp.models.Ride;
 import edu.uga.cs.rideshareapp.adapters.RideAdapter;
+import edu.uga.cs.rideshareapp.models.Ride;
 
 public class RidesFragment extends Fragment {
+
+    private RecyclerView recyclerView;
+    private RideAdapter adapter;
+    private List<Ride> rideList = new ArrayList<>();
 
     public RidesFragment() {}
 
@@ -25,17 +36,36 @@ public class RidesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_rides, container, false);
 
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewRides);
+        recyclerView = view.findViewById(R.id.recyclerViewRides);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<Ride> rideList = new ArrayList<>();
-        rideList.add(new Ride("From: East Campus → To: Athens Downtown", "Date: April 14, 2025 – 5:00 PM", "Notes: 3 seats available, no pets please"));
-        rideList.add(new Ride("From: UGA → To: Airport", "Date: April 15, 2025 – 8:30 AM", "Notes: Will wait max 10 mins"));
-        rideList.add(new Ride("From: Main Library → To: Five Points", "Date: April 16, 2025 – 2:00 PM", "Notes: Shared ride with 2 more"));
-
-        RideAdapter adapter = new RideAdapter(rideList);
+        adapter = new RideAdapter(rideList);
         recyclerView.setAdapter(adapter);
 
+        loadRideOffersFromFirebase();
+
         return view;
+    }
+
+    private void loadRideOffersFromFirebase() {
+        FirebaseDatabase.getInstance().getReference("ride_offers")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        rideList.clear();
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Ride ride = snap.getValue(Ride.class);
+                            if (ride != null) {
+                                rideList.add(ride);
+                            }
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(getContext(), "Failed to load ride offers", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

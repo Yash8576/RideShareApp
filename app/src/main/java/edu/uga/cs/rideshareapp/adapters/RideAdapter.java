@@ -4,9 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,25 +25,20 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.RideViewHolder
     @NonNull
     @Override
     public RideViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_ride, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ride, parent, false);
         return new RideViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RideViewHolder holder, int position) {
         Ride ride = rideList.get(position);
-        holder.textFromTo.setText(ride.fromTo);
-        holder.textDateTime.setText(ride.dateTime);
-        holder.textNotes.setText(ride.notes);
+        holder.fromText.setText("From: " + ride.from);
+        holder.toText.setText("To: " + ride.to);
+        holder.dateText.setText("Date: " + ride.date);
+        holder.timeText.setText("Time: " + ride.time);
 
-        holder.joinButton.setOnClickListener(v ->
-                Toast.makeText(v.getContext(), "Joined Ride", Toast.LENGTH_SHORT).show());
-
-        holder.closeButton.setOnClickListener(v -> {
-            rideList.remove(position);
-            notifyItemRemoved(position);
-            notifyItemRangeChanged(position, rideList.size());
+        holder.joinButton.setOnClickListener(v -> {
+            // You can later add logic to handle ride joining
         });
     }
 
@@ -55,17 +48,16 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.RideViewHolder
     }
 
     public static class RideViewHolder extends RecyclerView.ViewHolder {
-        TextView textFromTo, textDateTime, textNotes;
+        TextView fromText, toText, dateText, timeText;
         Button joinButton;
-        ImageButton closeButton;
 
         public RideViewHolder(@NonNull View itemView) {
             super(itemView);
-            textFromTo = itemView.findViewById(R.id.textViewFromToRide);
-            textDateTime = itemView.findViewById(R.id.textViewDateTimeRide);
-            textNotes = itemView.findViewById(R.id.textViewNotesRide);
+            fromText = itemView.findViewById(R.id.textViewFrom);
+            toText = itemView.findViewById(R.id.textViewTo);
+            dateText = itemView.findViewById(R.id.textViewDate);
+            timeText = itemView.findViewById(R.id.textViewTime);
             joinButton = itemView.findViewById(R.id.buttonJoinRide);
-            closeButton = itemView.findViewById(R.id.buttonClose);
         }
     }
 }
