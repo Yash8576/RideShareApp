@@ -22,6 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -37,6 +38,7 @@ public class PostedRequestsUserViewFragment extends Fragment {
 
     private PostedRequestAdapter adapter;
     private List<Request> requestList = new ArrayList<>();
+    private List<String> requestKeyList = new ArrayList<>();
     private RecyclerView recyclerView;
     private View emptyStateLayout;
 
@@ -51,8 +53,30 @@ public class PostedRequestsUserViewFragment extends Fragment {
         FloatingActionButton fab = view.findViewById(R.id.fabPostReq);
 
         adapter = new PostedRequestAdapter(requestList, position -> {
-            // Optional: You can implement delete logic here if needed
-            Toast.makeText(getContext(), "Cancel action triggered", Toast.LENGTH_SHORT).show();
+            Request requestToDelete = requestList.get(position);
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("ride_requests");
+
+            ref.orderByChild("from").equalTo(requestToDelete.from).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot child : snapshot.getChildren()) {
+                        Request r = child.getValue(Request.class);
+                        if (r != null &&
+                                r.from.equals(requestToDelete.from) &&
+                                r.to.equals(requestToDelete.to) &&
+                                r.date.equals(requestToDelete.date) &&
+                                r.time.equals(requestToDelete.time)) {
+                            child.getRef().removeValue();
+                            break;
+                        }
+                    }
+                    requestList.remove(position);
+                    adapter.notifyItemRemoved(position);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -76,8 +100,10 @@ public class PostedRequestsUserViewFragment extends Fragment {
                             Request request = data.getValue(Request.class);
                             if (request != null) {
                                 requestList.add(request);
+                                requestKeyList.add(snapshot.getKey());
                             }
                         }
+
                         adapter.notifyDataSetChanged();
                         updateViewVisibility();
                     }

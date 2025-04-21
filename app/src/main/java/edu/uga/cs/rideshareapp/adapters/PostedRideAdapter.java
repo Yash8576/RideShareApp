@@ -1,17 +1,21 @@
 package edu.uga.cs.rideshareapp.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.fragments.EditRideBottomSheet;
 import edu.uga.cs.rideshareapp.models.Ride;
 
 public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.RideViewHolder> {
@@ -38,13 +42,29 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
 
     @Override
     public void onBindViewHolder(@NonNull RideViewHolder holder, int position) {
-        Ride ride = rideList.get(position);
-        holder.fromText.setText("From: " + ride.from);
-        holder.toText.setText("To: " + ride.to);
-        holder.dateText.setText("Date: " + ride.date);
-        holder.timeText.setText("Time: " + ride.time);
+        Ride currentRide = rideList.get(position);
+        holder.fromText.setText("From: " + currentRide.from);
+        holder.toText.setText("To: " + currentRide.to);
+        holder.dateText.setText("Date: " + currentRide.date);
+        holder.timeText.setText("Time: " + currentRide.time);
 
         holder.cancelButton.setOnClickListener(v -> cancelListener.onRideCancelled(position));
+
+        holder.buttonEdit.setOnClickListener(v -> {
+            EditRideBottomSheet bottomSheet = new EditRideBottomSheet(currentRide, updatedRide -> {
+                rideList.set(position, updatedRide);
+                notifyItemChanged(position);
+            });
+
+            // ✅ Fix: cast only if context is an instance of FragmentActivity
+            Context context = holder.itemView.getContext();
+            if (context instanceof FragmentActivity) {
+                FragmentActivity activity = (FragmentActivity) context;
+                bottomSheet.show(activity.getSupportFragmentManager(), "EditRideBottomSheet");
+            } else {
+                Toast.makeText(context, "Unable to open editor", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -54,7 +74,7 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
 
     public static class RideViewHolder extends RecyclerView.ViewHolder {
         TextView fromText, toText, dateText, timeText;
-        Button cancelButton;
+        Button cancelButton, buttonEdit;
 
         public RideViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +83,7 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
             dateText = itemView.findViewById(R.id.textViewDate);
             timeText = itemView.findViewById(R.id.textViewTime);
             cancelButton = itemView.findViewById(R.id.buttonCancel);
+            buttonEdit = itemView.findViewById(R.id.buttonEdit);
         }
     }
 }
