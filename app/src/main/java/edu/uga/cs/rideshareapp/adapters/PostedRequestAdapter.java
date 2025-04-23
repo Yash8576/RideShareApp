@@ -12,17 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
-
 import java.util.List;
+import java.util.ArrayList;
 
 import edu.uga.cs.rideshareapp.R;
 import edu.uga.cs.rideshareapp.fragments.EditRequestBottomSheet;
-import edu.uga.cs.rideshareapp.fragments.EditRideBottomSheet;
 import edu.uga.cs.rideshareapp.models.Request;
-import edu.uga.cs.rideshareapp.models.Ride;
-
 
 public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdapter.RequestViewHolder> {
 
@@ -31,11 +26,17 @@ public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdap
     }
 
     private final List<Request> requestList;
+    private final List<String> keyList = new ArrayList<>();
     private final OnRequestCancelListener cancelListener;
 
     public PostedRequestAdapter(List<Request> requestList, OnRequestCancelListener cancelListener) {
         this.requestList = requestList;
         this.cancelListener = cancelListener;
+    }
+
+    public void updateKeys(List<String> newKeys) {
+        keyList.clear();
+        keyList.addAll(newKeys);
     }
 
     @NonNull
@@ -53,12 +54,17 @@ public class PostedRequestAdapter extends RecyclerView.Adapter<PostedRequestAdap
         holder.dateText.setText("Date: " + request.date);
         holder.timeText.setText("Time: " + request.time);
 
-        holder.cancelBtn.setOnClickListener(v ->
-                cancelListener.onRequestCancelled(position));
-        holder.buttonEdit1.setOnClickListener(v -> {
-            Request currentRequest = requestList.get(position);
+        holder.cancelBtn.setOnClickListener(v -> cancelListener.onRequestCancelled(position));
 
-            EditRequestBottomSheet bottomSheet = new EditRequestBottomSheet(currentRequest, updatedRequest -> {
+        holder.buttonEdit1.setOnClickListener(v -> {
+            String firebaseKey = position < keyList.size() ? keyList.get(position) : null;
+
+            if (firebaseKey == null) {
+                Toast.makeText(holder.itemView.getContext(), "Key not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            EditRequestBottomSheet bottomSheet = new EditRequestBottomSheet(request, firebaseKey, updatedRequest -> {
                 requestList.set(position, updatedRequest);
                 notifyItemChanged(position);
             });

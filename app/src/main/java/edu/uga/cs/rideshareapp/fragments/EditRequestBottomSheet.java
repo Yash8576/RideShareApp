@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.Button;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -32,11 +34,12 @@ public class EditRequestBottomSheet extends BottomSheetDialogFragment {
     }
 
     private Request request;
-    private OnRequestUpdatedListener listener;
     private String firebaseKey;
+    private OnRequestUpdatedListener listener;
 
-    public EditRequestBottomSheet(Request request, OnRequestUpdatedListener listener) {
+    public EditRequestBottomSheet(Request request, String firebaseKey, OnRequestUpdatedListener listener) {
         this.request = request;
+        this.firebaseKey = firebaseKey;
         this.listener = listener;
     }
 
@@ -54,6 +57,7 @@ public class EditRequestBottomSheet extends BottomSheetDialogFragment {
         Button buttonUpdate = view.findViewById(R.id.btnUpdateRequest1);
         Button btnCancelEdit = view.findViewById(R.id.btnCancelEdit1);
 
+        // Pre-fill with existing data
         editFrom.setText(request.from);
         editTo.setText(request.to);
         editDate.setText(request.date);
@@ -62,6 +66,7 @@ public class EditRequestBottomSheet extends BottomSheetDialogFragment {
         editDate.setOnClickListener(v -> showDatePickerDialog(editDate));
         editTime.setOnClickListener(v -> showTimePickerDialog(editTime));
         btnCancelEdit.setOnClickListener(v -> dismiss());
+
         buttonUpdate.setOnClickListener(v -> {
             String newFrom = editFrom.getText().toString().trim();
             String newTo = editTo.getText().toString().trim();
@@ -73,11 +78,18 @@ public class EditRequestBottomSheet extends BottomSheetDialogFragment {
                 return;
             }
 
+            // Update request object
             request.from = newFrom;
             request.to = newTo;
             request.date = newDate;
             request.time = newTime;
 
+            // Ensure userEmail is always retained
+            if (request.userEmail == null || request.userEmail.isEmpty()) {
+                request.userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+            }
+
+            // Update in Firebase
             DatabaseReference ref = FirebaseDatabase.getInstance()
                     .getReference("ride_requests")
                     .child(firebaseKey);
@@ -103,7 +115,7 @@ public class EditRequestBottomSheet extends BottomSheetDialogFragment {
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 getContext(),
                 (DatePicker view, int year, int month, int dayOfMonth) -> {
-                    String date = dayOfMonth + "/" + (month + 1) + "/" + year;
+                    String date = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth);
                     editText.setText(date);
                 },
                 calendar.get(Calendar.YEAR),

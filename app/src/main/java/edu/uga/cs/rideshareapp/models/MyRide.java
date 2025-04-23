@@ -12,15 +12,6 @@ public class MyRide {
         // Required empty constructor for Firebase
     }
 
-    public MyRide(String from, String to, String date, String time) {
-        this.from = from;
-        this.to = to;
-        this.date = date;
-        this.time = time;
-        this.status = "Pending";       // Default status
-        this.coinsEarned = "+0 Coins"; // Default coins
-    }
-
     public MyRide(String from, String to, String date, String time, String status, String coinsEarned) {
         this.from = from;
         this.to = to;

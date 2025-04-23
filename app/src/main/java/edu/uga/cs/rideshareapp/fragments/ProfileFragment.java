@@ -46,11 +46,11 @@ public class ProfileFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String email = user.getEmail();
-            if (email != null && email.endsWith("@uga.edu")) {
-                String username = email.replace("@uga.edu", "");
+            if (email != null && email.contains("@")) {
+                String username = email.substring(0, email.indexOf("@"));  // Get everything before '@'
                 profileName.setText(username);
             } else {
-                profileName.setText("User");
+                profileName.setText("Dwaag");
             }
         }
 

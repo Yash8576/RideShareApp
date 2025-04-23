@@ -184,6 +184,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
 import java.util.ArrayList;
@@ -247,6 +249,8 @@ public class PostedRidesUserViewFragment extends Fragment {
     }
 
     private void loadPostedRides() {
+        String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+
         FirebaseDatabase.getInstance().getReference("ride_offers")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -254,13 +258,13 @@ public class PostedRidesUserViewFragment extends Fragment {
                         rideList.clear();
                         for (DataSnapshot snap : snapshot.getChildren()) {
                             Ride ride = snap.getValue(Ride.class);
-                            if (ride != null) {
+                            if (ride != null && ride.userEmail != null && ride.userEmail.equals(currentUserEmail)) {
                                 rideList.add(ride);
                             }
                         }
                         adapter.notifyDataSetChanged();
 
-                        // ✅ SHOW/HIDE EMPTY STATE
+                        // Show/hide empty state
                         if (rideList.isEmpty()) {
                             recyclerView.setVisibility(View.GONE);
                             if (getView() != null) {
@@ -325,7 +329,14 @@ public class PostedRidesUserViewFragment extends Fragment {
                 return;
             }
 
-            Ride ride = new Ride(f, t, d, ti);
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user == null) {
+                Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String email = user.getEmail();
+
+            Ride ride = new Ride(f, t, d, ti, email);  // use the new constructor
 
             FirebaseDatabase.getInstance().getReference("ride_offers")
                     .push()

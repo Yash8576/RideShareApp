@@ -13,16 +13,15 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -37,8 +36,8 @@ import edu.uga.cs.rideshareapp.models.Request;
 public class PostedRequestsUserViewFragment extends Fragment {
 
     private PostedRequestAdapter adapter;
-    private List<Request> requestList = new ArrayList<>();
-    private List<String> requestKeyList = new ArrayList<>();
+    private final List<Request> requestList = new ArrayList<>();
+    private final List<String> keyList = new ArrayList<>();
     private RecyclerView recyclerView;
     private View emptyStateLayout;
 
@@ -53,30 +52,16 @@ public class PostedRequestsUserViewFragment extends Fragment {
         FloatingActionButton fab = view.findViewById(R.id.fabPostReq);
 
         adapter = new PostedRequestAdapter(requestList, position -> {
-            Request requestToDelete = requestList.get(position);
-            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("ride_requests");
+            String key = keyList.get(position);
+            FirebaseDatabase.getInstance()
+                    .getReference("ride_requests")
+                    .child(key)
+                    .removeValue();
 
-            ref.orderByChild("from").equalTo(requestToDelete.from).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot child : snapshot.getChildren()) {
-                        Request r = child.getValue(Request.class);
-                        if (r != null &&
-                                r.from.equals(requestToDelete.from) &&
-                                r.to.equals(requestToDelete.to) &&
-                                r.date.equals(requestToDelete.date) &&
-                                r.time.equals(requestToDelete.time)) {
-                            child.getRef().removeValue();
-                            break;
-                        }
-                    }
-                    requestList.remove(position);
-                    adapter.notifyItemRemoved(position);
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
+            requestList.remove(position);
+            keyList.remove(position);
+            adapter.notifyItemRemoved(position);
+            updateViewVisibility();
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -90,20 +75,32 @@ public class PostedRequestsUserViewFragment extends Fragment {
     }
 
     private void fetchRequestsFromFirebase() {
+        final String currentEmail;
+
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            currentEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        } else {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         FirebaseDatabase.getInstance()
                 .getReference("ride_requests")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         requestList.clear();
+                        keyList.clear();
+
                         for (DataSnapshot data : snapshot.getChildren()) {
                             Request request = data.getValue(Request.class);
-                            if (request != null) {
+                            if (request != null && currentEmail.equals(request.userEmail)) {
                                 requestList.add(request);
-                                requestKeyList.add(snapshot.getKey());
+                                keyList.add(data.getKey());
                             }
                         }
 
+                        adapter.updateKeys(keyList);
                         adapter.notifyDataSetChanged();
                         updateViewVisibility();
                     }
@@ -163,13 +160,14 @@ public class PostedRequestsUserViewFragment extends Fragment {
             String to = toField.getText().toString().trim();
             String date = dateField.getText().toString().trim();
             String time = timeField.getText().toString().trim();
+            String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
             if (from.isEmpty() || to.isEmpty() || date.isEmpty() || time.isEmpty()) {
                 Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Request request = new Request(from, to, date, time);
+            Request request = new Request(from, to, date, time, userEmail);
 
             FirebaseDatabase.getInstance()
                     .getReference("ride_requests")

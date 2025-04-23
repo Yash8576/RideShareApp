@@ -57,8 +57,8 @@ public class LoginActivity extends AppCompatActivity {
             String password = passwordEditText.getText().toString().trim();
 
             // ✅ Validations
-            if (!isValidUGAEmail(email)) {
-                Toast.makeText(this, "Enter a valid @uga.edu email", Toast.LENGTH_SHORT).show();
+            if (!isValidEmail(email)) {
+                Toast.makeText(this, "Enter a valid email", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -83,8 +83,8 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // 📧 Must be a valid UGA email
-    private boolean isValidUGAEmail(String email) {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches() && email.endsWith("@uga.edu");
+    // 📧 Must be a valid email
+    private boolean isValidEmail(String email) {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 }

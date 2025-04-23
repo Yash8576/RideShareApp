@@ -38,8 +38,8 @@ public class SignUpActivity extends AppCompatActivity {
             String password = passwordEditText.getText().toString().trim();
 
             // ✅ VALIDATION must happen BEFORE calling Firebase
-            if (!isValidUGAEmail(email)) {
-                Toast.makeText(this, "Please enter a valid @uga.edu email", Toast.LENGTH_SHORT).show();
+            if (!isValidEmail(email)) {
+                Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -67,8 +67,8 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     // ✅ UGA Email check
-    private boolean isValidUGAEmail(String email) {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches() && email.endsWith("@uga.edu");
+    private boolean isValidEmail(String email) {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
     // ✅ Strong password check
