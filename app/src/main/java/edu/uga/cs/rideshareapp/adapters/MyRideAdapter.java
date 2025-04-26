@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import edu.uga.cs.rideshareapp.models.MyRide;
 public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHolder> {
 
     private final List<MyRide> myRideList;
-    private final List<String> keyList;  // Firebase keys for accepted rides
+    private final List<String> keyList; // Firebase keys
 
     public MyRideAdapter(List<MyRide> myRideList, List<String> keyList) {
         this.myRideList = myRideList;
@@ -37,6 +38,7 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     @Override
     public void onBindViewHolder(@NonNull RideViewHolder holder, int position) {
         MyRide myRide = myRideList.get(position);
+
         holder.from.setText("From: " + myRide.from);
         holder.to.setText("To: " + myRide.to);
         holder.date.setText("Date: " + myRide.date);
@@ -44,28 +46,42 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
         holder.status.setText("Status: " + myRide.status);
         holder.coins.setText(myRide.coinsEarned);
 
+        holder.driverConfirmed.setText("Driver Confirmation: " + (myRide.confirmedByDriver ? "Confirmed" : "Pending"));
+        holder.riderConfirmed.setText("Rider Confirmation: " + (myRide.confirmedByRider ? "Confirmed" : "Pending"));
+
         String key = keyList.get(position);
 
         holder.confirm.setOnClickListener(v -> {
-            myRide.status = "Confirmed";
-            myRide.coinsEarned = "+50 Coins";
-            notifyItemChanged(position);
+            String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser() != null
+                    ? FirebaseAuth.getInstance().getCurrentUser().getEmail()
+                    : "";
 
-            FirebaseDatabase.getInstance().getReference("accepted_rides").child(key)
-                    .child("status").setValue("Confirmed");
-            FirebaseDatabase.getInstance().getReference("accepted_rides").child(key)
-                    .child("points").setValue("50");
+            FirebaseDatabase.getInstance().getReference("accepted_rides")
+                    .child(key)
+                    .addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
+                                String driverEmail = snapshot.child("driverEmail").getValue(String.class);
+                                String riderEmail = snapshot.child("riderEmail").getValue(String.class);
+
+                                if (currentUserEmail.equals(driverEmail)) {
+                                    snapshot.getRef().child("confirmedByDriver").setValue(true);
+                                } else if (currentUserEmail.equals(riderEmail)) {
+                                    snapshot.getRef().child("confirmedByRider").setValue(true);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {}
+                    });
         });
 
         holder.cancel.setOnClickListener(v -> {
-            myRide.status = "Cancelled";
-            myRide.coinsEarned = "+0 Coins";
-            notifyItemChanged(position);
-
-            FirebaseDatabase.getInstance().getReference("accepted_rides").child(key)
-                    .child("status").setValue("Cancelled");
-            FirebaseDatabase.getInstance().getReference("accepted_rides").child(key)
-                    .child("points").setValue("0");
+            FirebaseDatabase.getInstance().getReference("accepted_rides")
+                    .child(key)
+                    .removeValue();
         });
     }
 
@@ -75,7 +91,7 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     }
 
     static class RideViewHolder extends RecyclerView.ViewHolder {
-        TextView from, to, date, time, status, coins;
+        TextView from, to, date, time, status, coins, driverConfirmed, riderConfirmed;
         Button confirm, cancel;
 
         public RideViewHolder(@NonNull View itemView) {
@@ -86,6 +102,8 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
             time = itemView.findViewById(R.id.text_time);
             status = itemView.findViewById(R.id.text_status);
             coins = itemView.findViewById(R.id.text_coins);
+            driverConfirmed = itemView.findViewById(R.id.text_driver_confirmed);
+            riderConfirmed = itemView.findViewById(R.id.text_rider_confirmed);
             confirm = itemView.findViewById(R.id.button_confirm);
             cancel = itemView.findViewById(R.id.button_cancel);
         }

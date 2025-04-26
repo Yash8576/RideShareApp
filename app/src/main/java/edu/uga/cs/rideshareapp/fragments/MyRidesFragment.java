@@ -75,28 +75,38 @@ public class MyRidesFragment extends Fragment {
                             String time = snap.child("time").getValue(String.class);
                             String status = snap.child("status").getValue(String.class);
 
-                            String pointsStr;
-                            Object pointsObj = snap.child("points").getValue();
-                            if (pointsObj instanceof Long) {
-                                pointsStr = String.valueOf((Long) pointsObj);
-                            } else {
-                                pointsStr = pointsObj != null ? pointsObj.toString() : "0";
-                            }
+                            Boolean confirmedByDriver = snap.child("confirmedByDriver").getValue(Boolean.class);
+                            Boolean confirmedByRider = snap.child("confirmedByRider").getValue(Boolean.class);
 
-                            int pointsValue;
-                            try {
-                                pointsValue = Integer.parseInt(pointsStr);
-                            } catch (NumberFormatException e) {
-                                pointsValue = 0;
-                            }
+                            if (confirmedByDriver == null) confirmedByDriver = false;
+                            if (confirmedByRider == null) confirmedByRider = false;
 
-                            if ((driverEmail != null || riderEmail != null) &&
+                            int pointsValue = 50; // Fixed points
+
+                            if ((driverEmail != null && riderEmail != null) &&
                                     (currentUserEmail.equals(driverEmail) || currentUserEmail.equals(riderEmail))) {
 
-                                String coinLabel = currentUserEmail.equals(driverEmail) ? "+" : "-";
-                                String coinsEarned = coinLabel + pointsValue + " Coins";
+                                String coinsEarned;
+                                if (confirmedByDriver && confirmedByRider) {
+                                    String coinLabel = currentUserEmail.equals(driverEmail) ? "+" : "-";
+                                    coinsEarned = coinLabel + pointsValue + " Coins";
+                                } else {
+                                    coinsEarned = "Pending";
+                                }
 
-                                MyRide ride = new MyRide(from, to, date, time, status, coinsEarned);
+                                MyRide ride = new MyRide(
+                                        from,
+                                        to,
+                                        date,
+                                        time,
+                                        status != null ? status : "Pending",
+                                        coinsEarned,
+                                        driverEmail,
+                                        riderEmail,
+                                        confirmedByDriver,
+                                        confirmedByRider
+                                );
+
                                 myRides.add(ride);
                                 rideKeys.add(snap.getKey());
                             }
