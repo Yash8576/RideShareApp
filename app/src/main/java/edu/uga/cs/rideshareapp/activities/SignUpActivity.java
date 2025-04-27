@@ -4,68 +4,77 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 import edu.uga.cs.rideshareapp.R;
-import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 
 public class SignUpActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText emailEditText, passwordEditText;
-    private Button signupButton;
+    private Button signUpButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        // 🔥 Request no title bar
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getSupportActionBar().hide();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
+        // 🔥 Full screen flags to cover everything (no safe area restrictions)
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.sign_up_scroll), (view, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(0, 0, 0, 0); // ✅ no padding at all
+            return insets;
+        });
+
         mAuth = FirebaseAuth.getInstance();
 
+        // Bind views
         emailEditText = findViewById(R.id.signUpMail);
         passwordEditText = findViewById(R.id.signUpPassword);
-        signupButton = findViewById(R.id.signUpMailButton);
+        signUpButton = findViewById(R.id.signUpMailButton);
 
-        signupButton.setOnClickListener(view -> {
+        // SignUp button logic
+        signUpButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
 
-            // ✅ Validation before Firebase call
             if (!isValidEmail(email)) {
-                Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignUpActivity.this, "Enter a valid email", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (!isValidPassword(password)) {
-                Toast.makeText(this, "Password must be at least 8 characters, include uppercase, lowercase, number, and symbol", Toast.LENGTH_LONG).show();
+            if (password.length() < 6) {
+                Toast.makeText(SignUpActivity.this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // ✅ Signup with Firebase
+            // 🔥 Firebase sign-up
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            // 🎯 Set initial 50 coins after signup
-                            CoinsManager.initializeCoinsForNewUser();
-
-                            Toast.makeText(this, "Sign-up successful!", Toast.LENGTH_SHORT).show();
-
+                            Toast.makeText(SignUpActivity.this, "Sign up successful!", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(SignUpActivity.this, SelectionActivity.class));
                             finish();
                         } else {
-                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                Toast.makeText(this, "Email already registered", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                            }
+                            Toast.makeText(SignUpActivity.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         });
@@ -73,13 +82,5 @@ public class SignUpActivity extends AppCompatActivity {
 
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
-    }
-
-    private boolean isValidPassword(String password) {
-        return password.length() >= 8 &&
-                password.matches(".*[A-Z].*") &&       // at least one uppercase
-                password.matches(".*[a-z].*") &&       // at least one lowercase
-                password.matches(".*\\d.*") &&         // at least one digit
-                password.matches(".*[!@#$%^&*()].*");  // at least one symbol
     }
 }
