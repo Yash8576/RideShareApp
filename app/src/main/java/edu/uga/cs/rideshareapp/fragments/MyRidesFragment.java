@@ -41,7 +41,8 @@ public class MyRidesFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_my_rides);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new MyRideAdapter(myRides, rideKeys);
+        // ✅ Corrected Adapter creation
+        adapter = new MyRideAdapter(getContext(), myRides, rideKeys);
         recyclerView.setAdapter(adapter);
 
         fetchAcceptedRides();
@@ -69,47 +70,46 @@ public class MyRidesFragment extends Fragment {
                         for (DataSnapshot snap : snapshot.getChildren()) {
                             String driverEmail = snap.child("driverEmail").getValue(String.class);
                             String riderEmail = snap.child("riderEmail").getValue(String.class);
+
+                            if (driverEmail == null || riderEmail == null) continue;
+
+                            if (!(currentUserEmail.equals(driverEmail) || currentUserEmail.equals(riderEmail))) continue;
+
                             String from = snap.child("from").getValue(String.class);
                             String to = snap.child("to").getValue(String.class);
                             String date = snap.child("date").getValue(String.class);
                             String time = snap.child("time").getValue(String.class);
                             String status = snap.child("status").getValue(String.class);
-
                             Boolean confirmedByDriver = snap.child("confirmedByDriver").getValue(Boolean.class);
                             Boolean confirmedByRider = snap.child("confirmedByRider").getValue(Boolean.class);
 
                             if (confirmedByDriver == null) confirmedByDriver = false;
                             if (confirmedByRider == null) confirmedByRider = false;
 
-                            int pointsValue = 50; // Fixed points
+                            int pointsValue = 50;
+                            String coinsEarned;
 
-                            if ((driverEmail != null && riderEmail != null) &&
-                                    (currentUserEmail.equals(driverEmail) || currentUserEmail.equals(riderEmail))) {
-
-                                String coinsEarned;
-                                if (confirmedByDriver && confirmedByRider) {
-                                    String coinLabel = currentUserEmail.equals(driverEmail) ? "+" : "-";
-                                    coinsEarned = coinLabel + pointsValue + " Coins";
-                                } else {
-                                    coinsEarned = "Pending";
-                                }
-
-                                MyRide ride = new MyRide(
-                                        from,
-                                        to,
-                                        date,
-                                        time,
-                                        status != null ? status : "Pending",
-                                        coinsEarned,
-                                        driverEmail,
-                                        riderEmail,
-                                        confirmedByDriver,
-                                        confirmedByRider
-                                );
-
-                                myRides.add(ride);
-                                rideKeys.add(snap.getKey());
+                            if (confirmedByDriver && confirmedByRider) {
+                                coinsEarned = (currentUserEmail.equals(driverEmail) ? "+" : "-") + pointsValue + " Coins";
+                            } else {
+                                coinsEarned = "Pending";
                             }
+
+                            MyRide ride = new MyRide(
+                                    from != null ? from : "Unknown",
+                                    to != null ? to : "Unknown",
+                                    date != null ? date : "Unknown",
+                                    time != null ? time : "Unknown",
+                                    status != null ? status : "Pending",
+                                    coinsEarned,
+                                    driverEmail,
+                                    riderEmail,
+                                    confirmedByDriver,
+                                    confirmedByRider
+                            );
+
+                            myRides.add(ride);
+                            rideKeys.add(snap.getKey());
                         }
 
                         adapter.notifyDataSetChanged();
