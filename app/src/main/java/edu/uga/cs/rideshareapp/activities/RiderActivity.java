@@ -169,4 +169,9 @@ public class RiderActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateCoinsDisplay();
+    }
 }

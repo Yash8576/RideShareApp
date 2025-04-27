@@ -7,84 +7,75 @@ import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.*;
 
 public class CoinsManager {
 
     private static final String USERS_PATH = "users";
 
+    private static DatabaseReference getCoinsRef(String uid) {
+        return FirebaseDatabase.getInstance().getReference(USERS_PATH).child(uid).child("coins");
+    }
+
+    private static FirebaseUser getCurrentUser() {
+        return FirebaseAuth.getInstance().getCurrentUser();
+    }
+
+    // Fetch current user's coins
     public static void fetchCoins(ValueEventListener listener) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
-                    .child(currentUser.getUid())
-                    .child("coins");
-            coinsRef.addListenerForSingleValueEvent(listener);
+        FirebaseUser user = getCurrentUser();
+        if (user != null) {
+            getCoinsRef(user.getUid()).addListenerForSingleValueEvent(listener);
         }
     }
 
+    // Listen continuously for coins updates (optional use)
     public static void listenForCoins(ValueEventListener listener) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
-                    .child(currentUser.getUid())
-                    .child("coins");
-            coinsRef.addValueEventListener(listener);
+        FirebaseUser user = getCurrentUser();
+        if (user != null) {
+            getCoinsRef(user.getUid()).addValueEventListener(listener);
         }
     }
 
+    // Update coins by delta (+ or -)
     public static void updateCoins(int delta, String userId) {
-        DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
-                .child(userId)
-                .child("coins");
-
-        coinsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        getCoinsRef(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Integer coins = snapshot.getValue(Integer.class);
-                if (coins != null) {
-                    coinsRef.setValue(coins + delta);
-                } else {
-                    coinsRef.setValue(50 + delta);
-                }
+                Integer currentCoins = snapshot.getValue(Integer.class);
+                int updatedCoins = (currentCoins != null ? currentCoins : 50) + delta;
+                getCoinsRef(userId).setValue(updatedCoins);
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) { }
         });
     }
 
+    // Initialize user with 50 coins if not present
     public static void initializeCoinsIfNeeded(Context context) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
-                    .child(currentUser.getUid())
-                    .child("coins");
-
-            coinsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        FirebaseUser user = getCurrentUser();
+        if (user != null) {
+            getCoinsRef(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (!snapshot.exists()) {
-                        coinsRef.setValue(50);
-                        Toast.makeText(context, "Account initialized with 50 coins", Toast.LENGTH_SHORT).show();
+                        getCoinsRef(user.getUid()).setValue(50);
+                        Toast.makeText(context, "Account initialized with 50 coins!", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(context, "Failed to initialize coins", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Failed to initialize coins.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
-    // 🆕 NEW: Universal function to update coins for both driver and rider when ride is fully confirmed
+    // Handle coins transfer: +50 to driver, -50 from rider only when ride confirmed
     public static void handleCoinsWhenRideConfirmed(String driverUid, String riderUid) {
-        updateCoins(50, driverUid);   // driver earns +50
-        updateCoins(-50, riderUid);   // rider loses -50
+        updateCoins(50, driverUid);   // driver earns 50
+        updateCoins(-50, riderUid);   // rider loses 50
     }
 }

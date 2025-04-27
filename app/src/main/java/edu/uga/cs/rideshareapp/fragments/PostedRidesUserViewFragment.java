@@ -182,7 +182,7 @@ public class PostedRidesUserViewFragment extends Fragment {
                 return;
             }
 
-            Ride ride = new Ride(from, to, date, time, userEmail, userUid);
+            Ride ride = new Ride(from, to, date, time, user.getEmail(), user.getUid()); // 🆕 pass UID
 
             FirebaseDatabase.getInstance().getReference("ride_offers")
                     .push()

@@ -23,16 +23,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.*;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 import edu.uga.cs.rideshareapp.adapters.PostedRequestAdapter;
 import edu.uga.cs.rideshareapp.models.Request;
 
@@ -82,7 +80,24 @@ public class PostedRequestsUserViewFragment extends Fragment {
             return insets;
         });
 
-        fab.setOnClickListener(v -> showBottomSheet());
+        fab.setOnClickListener(v -> {
+            CoinsManager.fetchCoins(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Integer coins = snapshot.getValue(Integer.class);
+                    if (coins != null && coins >= 50) {
+                        showBottomSheet();
+                    } else {
+                        Toast.makeText(getContext(), "You need at least 50 coins to post a request.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(getContext(), "Failed to fetch coin balance", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
 
         fetchRequestsFromFirebase();
 
@@ -144,30 +159,18 @@ public class PostedRequestsUserViewFragment extends Fragment {
         dateField.setClickable(true);
         dateField.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
-            new DatePickerDialog(requireContext(),
-                    (DatePicker view, int year, int month, int day) -> {
-                        String formattedDate = String.format("%04d-%02d-%02d", year, month + 1, day);
-                        dateField.setText(formattedDate);
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-            ).show();
+            new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+                dateField.setText(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth));
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
         });
 
         timeField.setFocusable(false);
         timeField.setClickable(true);
         timeField.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
-            new TimePickerDialog(requireContext(),
-                    (TimePicker view, int hour, int minute) -> {
-                        String formattedTime = String.format("%02d:%02d", hour, minute);
-                        timeField.setText(formattedTime);
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    false
-            ).show();
+            new TimePickerDialog(requireContext(), (view, hourOfDay, minute) -> {
+                timeField.setText(String.format("%02d:%02d", hourOfDay, minute));
+            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false).show();
         });
 
         postButton.setOnClickListener(btn -> {
@@ -182,7 +185,8 @@ public class PostedRequestsUserViewFragment extends Fragment {
                 return;
             }
 
-            Request request = new Request(from, to, date, time, userEmail);
+            String userUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); // 🆕 Get UID
+            Request request = new Request(from, to, date, time, userEmail, userUid); // 🆕 pass UID
 
             FirebaseDatabase.getInstance()
                     .getReference("ride_requests")

@@ -51,6 +51,9 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.RequestV
             String driverEmail = FirebaseAuth.getInstance().getCurrentUser() != null
                     ? FirebaseAuth.getInstance().getCurrentUser().getEmail()
                     : "unknown";
+            String driverUid = FirebaseAuth.getInstance().getCurrentUser() != null
+                    ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                    : "unknown";
 
             if (driverEmail.equals(request.userEmail)) {
                 Toast.makeText(v.getContext(), "You cannot accept your own request!", Toast.LENGTH_SHORT).show();
@@ -63,17 +66,20 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.RequestV
             acceptedRide.put("to", request.to);
             acceptedRide.put("date", request.date);
             acceptedRide.put("time", request.time);
-            acceptedRide.put("driverEmail", driverEmail);
-            acceptedRide.put("riderEmail", request.userEmail); // original poster
+            acceptedRide.put("driverEmail", driverEmail);         // Accepting user
+            acceptedRide.put("driverUid", driverUid);              // Accepting user's UID ✅
+            acceptedRide.put("riderEmail", request.userEmail);     // Request poster
+            acceptedRide.put("riderUid", request.userUid);         // Request poster's UID ✅
             acceptedRide.put("status", "Pending");
             acceptedRide.put("points", 50);
+            acceptedRide.put("confirmedByDriver", false);
+            acceptedRide.put("confirmedByRider", false);
 
             FirebaseDatabase.getInstance()
                     .getReference("accepted_rides")
                     .push()
                     .setValue(acceptedRide)
                     .addOnSuccessListener(unused -> {
-                        // Now remove it from ride_requests
                         FirebaseDatabase.getInstance()
                                 .getReference("ride_requests")
                                 .orderByChild("from").equalTo(request.from)

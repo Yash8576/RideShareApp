@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,9 +18,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import edu.uga.cs.rideshareapp.R;
 import edu.uga.cs.rideshareapp.models.MyRide;
@@ -29,7 +28,6 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     private final List<MyRide> myRideList;
     private final List<String> keyList;
     private final Context context;
-    private final Set<String> updatedRides = new HashSet<>();
 
     public MyRideAdapter(Context context, List<MyRide> myRideList, List<String> keyList) {
         this.context = context;
@@ -73,15 +71,45 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
                             String driverEmail = snapshot.child("driverEmail").getValue(String.class);
                             String riderEmail = snapshot.child("riderEmail").getValue(String.class);
 
+                            boolean driverConfirmed = snapshot.child("confirmedByDriver").getValue(Boolean.class) != null
+                                    ? snapshot.child("confirmedByDriver").getValue(Boolean.class) : false;
+                            boolean riderConfirmed = snapshot.child("confirmedByRider").getValue(Boolean.class) != null
+                                    ? snapshot.child("confirmedByRider").getValue(Boolean.class) : false;
+
                             if (currentUserEmail.equals(driverEmail)) {
+                                driverConfirmed = true;
                                 snapshot.getRef().child("confirmedByDriver").setValue(true);
                             } else if (currentUserEmail.equals(riderEmail)) {
+                                riderConfirmed = true;
                                 snapshot.getRef().child("confirmedByRider").setValue(true);
+                            }
+
+                            // 🛡️ After setting, check immediately if both confirmed
+                            if (driverConfirmed && riderConfirmed) {
+                                String driverUid = snapshot.child("driverUid").getValue(String.class);
+                                String riderUid = snapshot.child("riderUid").getValue(String.class);
+
+                                if (driverUid != null && riderUid != null) {
+                                    CoinsManager.handleCoinsWhenRideConfirmed(driverUid, riderUid);
+
+                                    // 🛑 Remove the ride from database
+                                    snapshot.getRef().removeValue();
+
+                                    // 🔥 Remove from adapter list
+                                    int adapterPosition = holder.getAdapterPosition();
+                                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                                        myRideList.remove(adapterPosition);
+                                        keyList.remove(adapterPosition);
+                                        notifyItemRemoved(adapterPosition);
+                                    }
+
+                                    Toast.makeText(context, "Ride confirmed. Coins transferred!", Toast.LENGTH_SHORT).show();
+                                }
                             }
                         }
 
                         @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
+                        public void onCancelled(@NonNull DatabaseError error) { }
                     });
         });
 
@@ -89,47 +117,14 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
             FirebaseDatabase.getInstance().getReference("accepted_rides")
                     .child(key)
                     .removeValue();
+
+            int adapterPosition = holder.getAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                myRideList.remove(adapterPosition);
+                keyList.remove(adapterPosition);
+                notifyItemRemoved(adapterPosition);
+            }
         });
-
-        // 🔥 Listen to ride status changes
-        FirebaseDatabase.getInstance().getReference("accepted_rides")
-                .child(key)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) return;
-
-                        Boolean driverConfirmed = snapshot.child("confirmedByDriver").getValue(Boolean.class);
-                        Boolean riderConfirmed = snapshot.child("confirmedByRider").getValue(Boolean.class);
-
-                        if (driverConfirmed != null && riderConfirmed != null && driverConfirmed && riderConfirmed) {
-                            if (!updatedRides.contains(key)) {
-                                updatedRides.add(key); // 🛡️ Only update once for this ride
-
-                                String driverUid = snapshot.child("driverUid").getValue(String.class);
-                                String riderUid = snapshot.child("riderUid").getValue(String.class);
-
-                                if (driverUid != null && riderUid != null) {
-                                    CoinsManager.handleCoinsWhenRideConfirmed(driverUid, riderUid);
-                                }
-
-                                // Remove the ride entry from Firebase
-                                snapshot.getRef().removeValue();
-
-                                // Remove from adapter
-                                int adapterPosition = holder.getAdapterPosition();
-                                if (adapterPosition != RecyclerView.NO_POSITION) {
-                                    myRideList.remove(adapterPosition);
-                                    keyList.remove(adapterPosition);
-                                    notifyItemRemoved(adapterPosition);
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
     }
 
     @Override
