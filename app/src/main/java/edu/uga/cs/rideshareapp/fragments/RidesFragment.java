@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,7 +30,7 @@ public class RidesFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private RideAdapter adapter;
-    private List<Ride> rideList = new ArrayList<>();
+    private final List<Ride> rideList = new ArrayList<>();
 
     public RidesFragment() {}
 
@@ -41,6 +44,18 @@ public class RidesFragment extends Fragment {
 
         adapter = new RideAdapter(rideList);
         recyclerView.setAdapter(adapter);
+
+        // ✅ Add system padding + 110dp to RecyclerView for bottom navigation bar
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom + 110
+            );
+            return insets;
+        });
 
         loadRideOffersFromFirebase();
 

@@ -8,9 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -27,8 +30,7 @@ public class ProfileFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         Button btnMyRides = view.findViewById(R.id.button_my_rides);
@@ -40,6 +42,20 @@ public class ProfileFragment extends Fragment {
 
         TextView profileName = view.findViewById(R.id.profile_name);
         ImageView profileLogo = view.findViewById(R.id.profile_logo);
+
+        ScrollView scrollView = view.findViewById(R.id.scroll_area);
+
+        // ✅ Proper dynamic bottom padding to avoid hiding last button
+        ViewCompat.setOnApplyWindowInsetsListener(scrollView, (v, insets) -> {
+            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    bottomInset + 110  // ➡️ little extra padding for good spacing
+            );
+            return insets;
+        });
 
         // Set profile name
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
