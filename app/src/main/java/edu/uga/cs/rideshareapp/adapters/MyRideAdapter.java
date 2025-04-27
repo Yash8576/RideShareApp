@@ -5,12 +5,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseError;
 
 import java.util.List;
 
@@ -64,11 +67,41 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
                                 String driverEmail = snapshot.child("driverEmail").getValue(String.class);
                                 String riderEmail = snapshot.child("riderEmail").getValue(String.class);
 
+                                boolean confirmedByDriver = snapshot.child("confirmedByDriver").getValue(Boolean.class) != null &&
+                                        snapshot.child("confirmedByDriver").getValue(Boolean.class);
+                                boolean confirmedByRider = snapshot.child("confirmedByRider").getValue(Boolean.class) != null &&
+                                        snapshot.child("confirmedByRider").getValue(Boolean.class);
+
                                 if (currentUserEmail.equals(driverEmail)) {
                                     snapshot.getRef().child("confirmedByDriver").setValue(true);
                                 } else if (currentUserEmail.equals(riderEmail)) {
                                     snapshot.getRef().child("confirmedByRider").setValue(true);
                                 }
+
+                                // 🔥 After updating, check if both confirmed
+                                snapshot.getRef().addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot newSnap) {
+                                        Boolean newConfirmedByDriver = newSnap.child("confirmedByDriver").getValue(Boolean.class);
+                                        Boolean newConfirmedByRider = newSnap.child("confirmedByRider").getValue(Boolean.class);
+
+                                        if (Boolean.TRUE.equals(newConfirmedByDriver) && Boolean.TRUE.equals(newConfirmedByRider)) {
+                                            newSnap.getRef().removeValue(); // Remove from Firebase
+
+                                            int adapterPosition = holder.getAdapterPosition();
+                                            if (adapterPosition != RecyclerView.NO_POSITION) {
+                                                myRideList.remove(adapterPosition);
+                                                keyList.remove(adapterPosition);
+                                                notifyItemRemoved(adapterPosition);
+
+                                                Toast.makeText(holder.itemView.getContext(), "Ride confirmed and completed!", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {}
+                                });
                             }
                         }
 
