@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -70,7 +71,10 @@ public class SignUpActivity extends AppCompatActivity {
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            Toast.makeText(SignUpActivity.this, "Sign up successful!", Toast.LENGTH_SHORT).show();
+                            // ✅ Award 50 coins after signup
+                            CoinsManager.initializeCoinsIfNeeded(SignUpActivity.this);
+
+                            Toast.makeText(SignUpActivity.this, "Sign up successful! 50 coins awarded!", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(SignUpActivity.this, SelectionActivity.class));
                             finish();
                         } else {

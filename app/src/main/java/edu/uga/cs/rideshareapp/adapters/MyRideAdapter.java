@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +29,7 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     private final List<MyRide> myRideList;
     private final List<String> keyList;
     private final Context context;
-    private final Set<String> updatedCoinsForKeys = new HashSet<>(); // track which rides already updated coins
+    private final Set<String> updatedRides = new HashSet<>();
 
     public MyRideAdapter(Context context, List<MyRide> myRideList, List<String> keyList) {
         this.context = context;
@@ -55,51 +54,11 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
         holder.date.setText("Date: " + myRide.date);
         holder.time.setText("Time: " + myRide.time);
         holder.coins.setText(myRide.coinsEarned);
-
         holder.driverConfirmed.setText("Driver Confirmation: " + (myRide.confirmedByDriver ? "Confirmed" : "Pending"));
         holder.riderConfirmed.setText("Rider Confirmation: " + (myRide.confirmedByRider ? "Confirmed" : "Pending"));
 
         String key = keyList.get(position);
 
-        // 🔥 Attach live listener to this ride
-        FirebaseDatabase.getInstance().getReference("accepted_rides")
-                .child(key)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (!snapshot.exists()) return;
-
-                        Boolean driverConfirmed = snapshot.child("confirmedByDriver").getValue(Boolean.class);
-                        Boolean riderConfirmed = snapshot.child("confirmedByRider").getValue(Boolean.class);
-
-                        if (driverConfirmed != null && riderConfirmed != null && driverConfirmed && riderConfirmed) {
-                            // ✅ Both confirmed
-
-                            if (!updatedCoinsForKeys.contains(key)) {
-                                updatedCoinsForKeys.add(key); // avoid double updates
-
-                                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                                String currentUserEmail = currentUser != null ? currentUser.getEmail() : "";
-
-                                String driverEmail = snapshot.child("driverEmail").getValue(String.class);
-                                String riderEmail = snapshot.child("riderEmail").getValue(String.class);
-
-                                if (currentUserEmail.equals(driverEmail)) {
-                                    CoinsManager.updateCoins(50, context); // Driver earns 50 coins
-                                    Toast.makeText(context, "🎉 You earned 50 coins!", Toast.LENGTH_SHORT).show();
-                                } else if (currentUserEmail.equals(riderEmail)) {
-                                    CoinsManager.updateCoins(-50, context); // Rider spends 50 coins
-                                    Toast.makeText(context, "💸 You spent 50 coins!", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
-
-        // ✅ Confirm Button Logic (only mark confirm)
         holder.confirm.setOnClickListener(v -> {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             String currentUserEmail = currentUser != null ? currentUser.getEmail() : "";
@@ -131,6 +90,46 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
                     .child(key)
                     .removeValue();
         });
+
+        // 🔥 Listen to ride status changes
+        FirebaseDatabase.getInstance().getReference("accepted_rides")
+                .child(key)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!snapshot.exists()) return;
+
+                        Boolean driverConfirmed = snapshot.child("confirmedByDriver").getValue(Boolean.class);
+                        Boolean riderConfirmed = snapshot.child("confirmedByRider").getValue(Boolean.class);
+
+                        if (driverConfirmed != null && riderConfirmed != null && driverConfirmed && riderConfirmed) {
+                            if (!updatedRides.contains(key)) {
+                                updatedRides.add(key); // 🛡️ Only update once for this ride
+
+                                String driverUid = snapshot.child("driverUid").getValue(String.class);
+                                String riderUid = snapshot.child("riderUid").getValue(String.class);
+
+                                if (driverUid != null && riderUid != null) {
+                                    CoinsManager.handleCoinsWhenRideConfirmed(driverUid, riderUid);
+                                }
+
+                                // Remove the ride entry from Firebase
+                                snapshot.getRef().removeValue();
+
+                                // Remove from adapter
+                                int adapterPosition = holder.getAdapterPosition();
+                                if (adapterPosition != RecyclerView.NO_POSITION) {
+                                    myRideList.remove(adapterPosition);
+                                    keyList.remove(adapterPosition);
+                                    notifyItemRemoved(adapterPosition);
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
     }
 
     @Override

@@ -159,12 +159,15 @@ public class PostedRidesUserViewFragment extends Fragment {
             }
 
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            String userEmail = currentUser.getEmail();
+            String userUid = currentUser.getUid();
             if (user == null) {
                 Toast.makeText(getContext(), "Not logged in", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Ride ride = new Ride(from, to, date, time, user.getEmail());
+            Ride ride = new Ride(from, to, date, time, userEmail, userUid);
 
             FirebaseDatabase.getInstance().getReference("ride_offers")
                     .push()

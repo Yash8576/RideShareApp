@@ -39,7 +39,7 @@ public class RidesFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerViewRides);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new RideAdapter(rideList);
+        adapter = new RideAdapter(getContext(), rideList);
         recyclerView.setAdapter(adapter);
 
         loadRideOffersFromFirebase();

@@ -37,37 +37,54 @@ public class CoinsManager {
         }
     }
 
-    public static void updateCoins(int delta, Context context) {
+    public static void updateCoins(int delta, String userId) {
+        DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
+                .child(userId)
+                .child("coins");
+
+        coinsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Integer coins = snapshot.getValue(Integer.class);
+                if (coins != null) {
+                    coinsRef.setValue(coins + delta);
+                } else {
+                    coinsRef.setValue(50 + delta);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    public static void initializeCoinsIfNeeded(Context context) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             DatabaseReference coinsRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
                     .child(currentUser.getUid())
                     .child("coins");
+
             coinsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    Integer coins = snapshot.getValue(Integer.class);
-                    if (coins != null) {
-                        coinsRef.setValue(coins + delta);
-                    } else {
-                        coinsRef.setValue(50); // fallback if no coins exist
+                    if (!snapshot.exists()) {
+                        coinsRef.setValue(50);
+                        Toast.makeText(context, "Account initialized with 50 coins", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(context, "Failed to update coins", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Failed to initialize coins", Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
-    public static void initializeCoinsForNewUser() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference(USERS_PATH)
-                    .child(currentUser.getUid());
-            userRef.child("coins").setValue(50); // Initial 50 coins when account created
-        }
+    // 🆕 NEW: Universal function to update coins for both driver and rider when ride is fully confirmed
+    public static void handleCoinsWhenRideConfirmed(String driverUid, String riderUid) {
+        updateCoins(50, driverUid);   // driver earns +50
+        updateCoins(-50, riderUid);   // rider loses -50
     }
 }
