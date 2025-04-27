@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,9 +44,20 @@ public class MyRidesFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_my_rides);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // ✅ Corrected Adapter creation
         adapter = new MyRideAdapter(getContext(), myRides, rideKeys);
         recyclerView.setAdapter(adapter);
+
+        // ✅ Safe padding for bottom navigation (system bars + 110dp)
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom + 110
+            );
+            return insets;
+        });
 
         fetchAcceptedRides();
 
@@ -72,7 +86,6 @@ public class MyRidesFragment extends Fragment {
                             String riderEmail = snap.child("riderEmail").getValue(String.class);
 
                             if (driverEmail == null || riderEmail == null) continue;
-
                             if (!(currentUserEmail.equals(driverEmail) || currentUserEmail.equals(riderEmail))) continue;
 
                             String from = snap.child("from").getValue(String.class);

@@ -8,6 +8,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,7 +31,7 @@ public class RequestsFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private RequestAdapter adapter;
-    private List<Request> requestList = new ArrayList<>();
+    private final List<Request> requestList = new ArrayList<>();
 
     public RequestsFragment() {}
 
@@ -44,6 +47,18 @@ public class RequestsFragment extends Fragment {
 
         adapter = new RequestAdapter(requestList);
         recyclerView.setAdapter(adapter);
+
+        // ✅ Add safe padding + 110dp bottom so nothing is hidden by bottom nav
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom + 110
+            );
+            return insets;
+        });
 
         loadRequestsFromFirebase();
     }
