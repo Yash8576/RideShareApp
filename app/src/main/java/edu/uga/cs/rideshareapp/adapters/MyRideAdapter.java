@@ -43,7 +43,6 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
         holder.to.setText("To: " + myRide.to);
         holder.date.setText("Date: " + myRide.date);
         holder.time.setText("Time: " + myRide.time);
-        holder.status.setText("Status: " + myRide.status);
         holder.coins.setText(myRide.coinsEarned);
 
         holder.driverConfirmed.setText("Driver Confirmation: " + (myRide.confirmedByDriver ? "Confirmed" : "Pending"));
@@ -91,7 +90,7 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
     }
 
     static class RideViewHolder extends RecyclerView.ViewHolder {
-        TextView from, to, date, time, status, coins, driverConfirmed, riderConfirmed;
+        TextView from, to, date, time, coins, driverConfirmed, riderConfirmed;
         Button confirm, cancel;
 
         public RideViewHolder(@NonNull View itemView) {
@@ -100,7 +99,6 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
             to = itemView.findViewById(R.id.text_to);
             date = itemView.findViewById(R.id.text_date);
             time = itemView.findViewById(R.id.text_time);
-            status = itemView.findViewById(R.id.text_status);
             coins = itemView.findViewById(R.id.text_coins);
             driverConfirmed = itemView.findViewById(R.id.text_driver_confirmed);
             riderConfirmed = itemView.findViewById(R.id.text_rider_confirmed);

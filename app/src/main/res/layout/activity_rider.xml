@@ -30,6 +30,7 @@
         android:layout_gravity="bottom"
         android:background="@color/white"
         app:menu="@menu/driver_bottom_nav_menu2"
+        app:itemIconSize="20dp"
         app:labelVisibilityMode="labeled"
         app:itemIconTint="@color/nav_icon_selector"
         app:itemTextColor="@color/nav_icon_selector" />
