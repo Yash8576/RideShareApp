@@ -28,9 +28,9 @@ public class RiderActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private TextView coinCount;
 
-    private final Fragment ridesFragment = new RidesFragment();
-    private final Fragment requestsFragment = new PostedRequestsUserViewFragment();
-    private final Fragment profileFragment = new ProfileFragment();
+    private Fragment ridesFragment;
+    private Fragment requestsFragment;
+    private Fragment profileFragment;
 
     private Fragment currentFragment;
     private static final String SELECTED_TAB_KEY = "selected_tab_key";
@@ -54,11 +54,26 @@ public class RiderActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Fetch existing fragments if exist
+        ridesFragment = getSupportFragmentManager().findFragmentByTag("Rides");
+        requestsFragment = getSupportFragmentManager().findFragmentByTag("Requests");
+        profileFragment = getSupportFragmentManager().findFragmentByTag("Profile");
+
+        if (ridesFragment == null) {
+            ridesFragment = new RidesFragment();
+        }
+        if (requestsFragment == null) {
+            requestsFragment = new PostedRequestsUserViewFragment();
+        }
+        if (profileFragment == null) {
+            profileFragment = new ProfileFragment();
+        }
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragment_container, profileFragment, "Profile").hide(profileFragment)
-                    .add(R.id.fragment_container, ridesFragment, "Rides").hide(ridesFragment)
-                    .add(R.id.fragment_container, requestsFragment, "Requests")
+                    .add(R.id.fragment_container, requestsFragment, "Requests").hide(requestsFragment)
+                    .add(R.id.fragment_container, ridesFragment, "Rides")
                     .commit();
             currentFragment = ridesFragment;
             bottomNavigationView.setSelectedItemId(R.id.nav_rides);
@@ -98,7 +113,7 @@ public class RiderActivity extends AppCompatActivity {
             return false;
         });
 
-        updateCoinsDisplay(); // ✅ Fetch initial coins
+        updateCoinsDisplay(); // Fetch initial coins
     }
 
     private void updateCoinsDisplay() {
@@ -132,9 +147,7 @@ public class RiderActivity extends AppCompatActivity {
 
         updateCoinsDisplay(); // fetch coins when menu created
 
-        actionView.setOnClickListener(v -> {
-            updateCoinsDisplay(); // manual refresh if user clicks coin
-        });
+        actionView.setOnClickListener(v -> updateCoinsDisplay());
 
         return true;
     }

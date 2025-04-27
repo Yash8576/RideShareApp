@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -30,11 +31,6 @@ public class ProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Top section
-        ImageView profileLogo = view.findViewById(R.id.profile_logo);
-        TextView profileName = view.findViewById(R.id.profile_name);
-
-        // Buttons
         Button btnMyRides = view.findViewById(R.id.button_my_rides);
         Button btnComplaint = view.findViewById(R.id.button_complaint);
         Button btnAbout = view.findViewById(R.id.button_about);
@@ -42,78 +38,69 @@ public class ProfileFragment extends Fragment {
         Button btnLogout = view.findViewById(R.id.button_logout);
         Button btnRemoveAccount = view.findViewById(R.id.remove_acc_button);
 
-        // 🔐 Show username without @uga.edu
+        TextView profileName = view.findViewById(R.id.profile_name);
+        ImageView profileLogo = view.findViewById(R.id.profile_logo);
+
+        // Set profile name
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
+        if (user != null && user.getEmail() != null) {
             String email = user.getEmail();
-            if (email != null && email.contains("@")) {
-                String username = email.substring(0, email.indexOf("@"));  // Get everything before '@'
-                profileName.setText(username);
-            } else {
-                profileName.setText("Dwaag");
-            }
+            profileName.setText(email.split("@")[0]);
         }
 
-        // 👉 Navigate to My Rides
+        // Navigate to My Rides
         btnMyRides.setOnClickListener(v -> {
-            Fragment myRidesFragment = new MyRidesFragment();
+            hideBottomNavigation();
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, myRidesFragment)
+                    .replace(R.id.fragment_container, new MyRidesFragment())
                     .addToBackStack(null)
                     .commit();
         });
 
-        // 👉 Raise A Complaint
+        // Navigate to Raise Complaint
         btnComplaint.setOnClickListener(v -> {
-            Fragment complaintFragment = new RaiseAComplaintFragment();
+            hideBottomNavigation();
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, complaintFragment)
+                    .replace(R.id.fragment_container, new RaiseAComplaintFragment())
                     .addToBackStack(null)
                     .commit();
         });
 
-        // 👉 About Us
+        // Navigate to About Us
         btnAbout.setOnClickListener(v -> {
-            Fragment aboutUsFragment = new AboutUsFragment();
+            hideBottomNavigation();
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, aboutUsFragment)
+                    .replace(R.id.fragment_container, new AboutUsFragment())
                     .addToBackStack(null)
                     .commit();
         });
 
-        // 🔁 Reset Password
+        // Reset Password
         btnResetPassword.setOnClickListener(v -> {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-            if (currentUser != null) {
-                String email = currentUser.getEmail();
-                if (email != null && !email.isEmpty()) {
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("Reset Password")
-                            .setMessage("We'll send a password reset link to " + email + ". Continue?")
-                            .setPositiveButton("Send", (dialog, which) -> {
-                                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                                        .addOnCompleteListener(task -> {
-                                            if (task.isSuccessful()) {
-                                                Toast.makeText(getContext(), "Reset email sent to " + email, Toast.LENGTH_LONG).show();
-                                            } else {
-                                                Toast.makeText(getContext(), "Failed to send reset email. Try again later.", Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                } else {
-                    Toast.makeText(getContext(), "No email found for this user.", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "User not logged in.", Toast.LENGTH_SHORT).show();
+            if (currentUser != null && currentUser.getEmail() != null) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Reset Password")
+                        .setMessage("Send password reset email to " + currentUser.getEmail() + "?")
+                        .setPositiveButton("Send", (dialog, which) -> {
+                            FirebaseAuth.getInstance().sendPasswordResetEmail(currentUser.getEmail())
+                                    .addOnCompleteListener(task -> {
+                                        if (task.isSuccessful()) {
+                                            Toast.makeText(getContext(), "Reset email sent", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getContext(), "Failed to send reset email", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             }
         });
 
-        // 🚪 Logout
+        // Logout
         btnLogout.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(getActivity(), LoginActivity.class);
@@ -121,23 +108,23 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
         });
 
-        // ❌ Delete Account
+        // Delete Account
         btnRemoveAccount.setOnClickListener(v -> {
             new AlertDialog.Builder(requireContext())
-                    .setTitle("Remove Account")
-                    .setMessage("Are you sure you want to permanently delete your account?")
+                    .setTitle("Delete Account")
+                    .setMessage("Are you sure you want to delete your account?")
                     .setPositiveButton("Yes, Delete", (dialog, which) -> {
                         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                         if (currentUser != null) {
                             currentUser.delete()
                                     .addOnCompleteListener(task -> {
                                         if (task.isSuccessful()) {
-                                            Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getContext(), "Account deleted", Toast.LENGTH_SHORT).show();
                                             Intent intent = new Intent(getActivity(), LoginActivity.class);
                                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                             startActivity(intent);
                                         } else {
-                                            Toast.makeText(getContext(), "Failed to delete account. Please re-login and try again.", Toast.LENGTH_LONG).show();
+                                            Toast.makeText(getContext(), "Failed to delete account. Please re-login.", Toast.LENGTH_SHORT).show();
                                         }
                                     });
                         }
@@ -147,5 +134,35 @@ public class ProfileFragment extends Fragment {
         });
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        showBottomNavigation();
+    }
+
+    private void hideBottomNavigation() {
+        BottomNavigationView nav1 = requireActivity().findViewById(R.id.bottom_navigation1);
+        BottomNavigationView nav2 = requireActivity().findViewById(R.id.bottom_navigation2);
+
+        if (nav1 != null) {
+            nav1.setVisibility(View.GONE);
+        }
+        if (nav2 != null) {
+            nav2.setVisibility(View.GONE);
+        }
+    }
+
+    private void showBottomNavigation() {
+        BottomNavigationView nav1 = requireActivity().findViewById(R.id.bottom_navigation1);
+        BottomNavigationView nav2 = requireActivity().findViewById(R.id.bottom_navigation2);
+
+        if (nav1 != null) {
+            nav1.setVisibility(View.VISIBLE);
+        }
+        if (nav2 != null) {
+            nav2.setVisibility(View.VISIBLE);
+        }
     }
 }

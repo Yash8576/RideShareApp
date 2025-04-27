@@ -8,8 +8,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -28,9 +26,9 @@ public class DriverActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private TextView coinCount;
 
-    private final Fragment requestsFragment = new RequestsFragment();
-    private final Fragment ridesFragment = new PostedRidesUserViewFragment();
-    private final Fragment profileFragment = new ProfileFragment();
+    private Fragment requestsFragment;
+    private Fragment ridesFragment;
+    private Fragment profileFragment;
 
     private Fragment currentFragment;
     private static final String SELECTED_TAB_KEY = "selected_tab_key";
@@ -47,12 +45,20 @@ public class DriverActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_navigation1);
 
-        // Handle bottom nav insets (optional if needed)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
-            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-            v.setPadding(0, 0, 0, bottomInset);
-            return insets;
-        });
+        // Fetch existing fragments if they exist
+        requestsFragment = getSupportFragmentManager().findFragmentByTag("Requests");
+        ridesFragment = getSupportFragmentManager().findFragmentByTag("Rides");
+        profileFragment = getSupportFragmentManager().findFragmentByTag("Profile");
+
+        if (requestsFragment == null) {
+            requestsFragment = new RequestsFragment();
+        }
+        if (ridesFragment == null) {
+            ridesFragment = new PostedRidesUserViewFragment();
+        }
+        if (profileFragment == null) {
+            profileFragment = new ProfileFragment();
+        }
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -98,7 +104,7 @@ public class DriverActivity extends AppCompatActivity {
             return false;
         });
 
-        updateCoinsDisplay(); // ✅ Added after setting up everything
+        updateCoinsDisplay();
     }
 
     private void updateCoinsDisplay() {
@@ -130,11 +136,9 @@ public class DriverActivity extends AppCompatActivity {
         View actionView = coinItem.getActionView();
         coinCount = actionView.findViewById(R.id.coin_count);
 
-        updateCoinsDisplay(); // fetch coins when menu created
+        updateCoinsDisplay();
 
-        actionView.setOnClickListener(v -> {
-            updateCoinsDisplay(); // manual refresh on clicking coin
-        });
+        actionView.setOnClickListener(v -> updateCoinsDisplay());
 
         return true;
     }

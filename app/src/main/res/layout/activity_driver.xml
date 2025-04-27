@@ -22,13 +22,14 @@
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- BottomNavigationView (hug the system bar) -->
+    <!-- BottomNavigationView -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/white"
+        android:fitsSystemWindows="true"
         app:menu="@menu/driver_bottom_nav_menu1"
         app:labelVisibilityMode="labeled"
         app:itemIconTint="@color/nav_icon_selector"

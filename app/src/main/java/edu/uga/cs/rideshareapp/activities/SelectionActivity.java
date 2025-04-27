@@ -16,6 +16,12 @@ public class SelectionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ✅ Hide the ActionBar at the top (only for this Activity)
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         setContentView(R.layout.activity_selection);
 
         // Link to the FrameLayouts that act as buttons
