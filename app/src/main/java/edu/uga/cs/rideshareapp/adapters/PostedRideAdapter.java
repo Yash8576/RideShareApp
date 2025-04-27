@@ -25,10 +25,12 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
     }
 
     private final List<Ride> rideList;
+    private final List<String> keyList;
     private final OnRideCancelListener cancelListener;
 
-    public PostedRideAdapter(List<Ride> rideList, OnRideCancelListener cancelListener) {
+    public PostedRideAdapter(List<Ride> rideList, List<String> keyList, OnRideCancelListener cancelListener) {
         this.rideList = rideList;
+        this.keyList = keyList;
         this.cancelListener = cancelListener;
     }
 
@@ -43,6 +45,8 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
     @Override
     public void onBindViewHolder(@NonNull RideViewHolder holder, int position) {
         Ride currentRide = rideList.get(position);
+        String firebaseKey = keyList.get(position);
+
         holder.fromText.setText("From: " + currentRide.from);
         holder.toText.setText("To: " + currentRide.to);
         holder.dateText.setText("Date: " + currentRide.date);
@@ -51,16 +55,17 @@ public class PostedRideAdapter extends RecyclerView.Adapter<PostedRideAdapter.Ri
         holder.cancelButton.setOnClickListener(v -> cancelListener.onRideCancelled(position));
 
         holder.buttonEdit.setOnClickListener(v -> {
-            EditRideBottomSheet bottomSheet = new EditRideBottomSheet(currentRide, updatedRide -> {
+            EditRideBottomSheet bottomSheet = new EditRideBottomSheet(currentRide, firebaseKey, updatedRide -> {
                 rideList.set(position, updatedRide);
                 notifyItemChanged(position);
             });
 
-            // ✅ Fix: cast only if context is an instance of FragmentActivity
             Context context = holder.itemView.getContext();
             if (context instanceof FragmentActivity) {
-                FragmentActivity activity = (FragmentActivity) context;
-                bottomSheet.show(activity.getSupportFragmentManager(), "EditRideBottomSheet");
+                ((FragmentActivity) context).getSupportFragmentManager()
+                        .beginTransaction()
+                        .add(bottomSheet, "EditRideBottomSheet")
+                        .commit();
             } else {
                 Toast.makeText(context, "Unable to open editor", Toast.LENGTH_SHORT).show();
             }

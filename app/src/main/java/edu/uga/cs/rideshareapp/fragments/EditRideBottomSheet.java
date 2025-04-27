@@ -3,21 +3,19 @@ package edu.uga.cs.rideshareapp.fragments;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
-import android.widget.Button;
 
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Calendar;
@@ -32,11 +30,12 @@ public class EditRideBottomSheet extends BottomSheetDialogFragment {
     }
 
     private Ride ride;
-    private OnRideUpdatedListener listener;
     private String firebaseKey;
+    private OnRideUpdatedListener listener;
 
-    public EditRideBottomSheet(Ride ride, OnRideUpdatedListener listener) {
+    public EditRideBottomSheet(Ride ride, String firebaseKey, OnRideUpdatedListener listener) {
         this.ride = ride;
+        this.firebaseKey = firebaseKey;
         this.listener = listener;
     }
 
@@ -52,7 +51,7 @@ public class EditRideBottomSheet extends BottomSheetDialogFragment {
         EditText editDate = view.findViewById(R.id.editDate);
         EditText editTime = view.findViewById(R.id.editTime);
         Button buttonUpdate = view.findViewById(R.id.btnUpdateRide);
-        Button btnCancelEdit = view.findViewById(R.id.btnCancelEdit);
+        Button buttonCancel = view.findViewById(R.id.btnCancelEdit);
 
         editFrom.setText(ride.from);
         editTo.setText(ride.to);
@@ -61,7 +60,8 @@ public class EditRideBottomSheet extends BottomSheetDialogFragment {
 
         editDate.setOnClickListener(v -> showDatePickerDialog(editDate));
         editTime.setOnClickListener(v -> showTimePickerDialog(editTime));
-        btnCancelEdit.setOnClickListener(v -> dismiss());
+
+        buttonCancel.setOnClickListener(v -> dismiss());
 
         buttonUpdate.setOnClickListener(v -> {
             String newFrom = editFrom.getText().toString().trim();
@@ -79,21 +79,18 @@ public class EditRideBottomSheet extends BottomSheetDialogFragment {
             ride.date = newDate;
             ride.time = newTime;
 
-            DatabaseReference ref = FirebaseDatabase.getInstance()
+            FirebaseDatabase.getInstance()
                     .getReference("ride_offers")
-                    .child(firebaseKey);
-
-            ref.setValue(ride).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    Toast.makeText(getContext(), "Ride updated", Toast.LENGTH_SHORT).show();
-                    if (listener != null) {
-                        listener.onRideUpdated(ride);
-                    }
-                    dismiss();
-                } else {
-                    Toast.makeText(getContext(), "Failed to update ride", Toast.LENGTH_SHORT).show();
-                }
-            });
+                    .child(firebaseKey)
+                    .setValue(ride)
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(getContext(), "Ride updated", Toast.LENGTH_SHORT).show();
+                        if (listener != null) listener.onRideUpdated(ride);
+                        dismiss();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         });
 
         return view;
@@ -101,31 +98,25 @@ public class EditRideBottomSheet extends BottomSheetDialogFragment {
 
     private void showDatePickerDialog(EditText editText) {
         Calendar calendar = Calendar.getInstance();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                getContext(),
-                (DatePicker view, int year, int month, int dayOfMonth) -> {
-                    String date = dayOfMonth + "/" + (month + 1) + "/" + year;
-                    editText.setText(date);
-                },
+        new DatePickerDialog(
+                requireContext(),
+                (DatePicker view, int year, int month, int dayOfMonth) ->
+                        editText.setText(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)),
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
-        );
-        datePickerDialog.show();
+        ).show();
     }
 
     private void showTimePickerDialog(EditText editText) {
         Calendar calendar = Calendar.getInstance();
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                getContext(),
-                (TimePicker view, int hourOfDay, int minute) -> {
-                    String time = String.format("%02d:%02d", hourOfDay, minute);
-                    editText.setText(time);
-                },
+        new TimePickerDialog(
+                requireContext(),
+                (TimePicker view, int hourOfDay, int minute) ->
+                        editText.setText(String.format("%02d:%02d", hourOfDay, minute)),
                 calendar.get(Calendar.HOUR_OF_DAY),
                 calendar.get(Calendar.MINUTE),
                 false
-        );
-        timePickerDialog.show();
+        ).show();
     }
 }
