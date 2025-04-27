@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -37,7 +38,7 @@ public class SignUpActivity extends AppCompatActivity {
             String email = emailEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
 
-            // ✅ VALIDATION must happen BEFORE calling Firebase
+            // ✅ Validation before Firebase call
             if (!isValidEmail(email)) {
                 Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
                 return;
@@ -48,11 +49,15 @@ public class SignUpActivity extends AppCompatActivity {
                 return;
             }
 
-            // ✅ Only call Firebase if validation passes
+            // ✅ Signup with Firebase
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
+                            // 🎯 Set initial 50 coins after signup
+                            CoinsManager.initializeCoinsForNewUser();
+
                             Toast.makeText(this, "Sign-up successful!", Toast.LENGTH_SHORT).show();
+
                             startActivity(new Intent(SignUpActivity.this, SelectionActivity.class));
                             finish();
                         } else {
@@ -66,12 +71,10 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    // ✅ UGA Email check
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
-    // ✅ Strong password check
     private boolean isValidPassword(String password) {
         return password.length() >= 8 &&
                 password.matches(".*[A-Z].*") &&       // at least one uppercase

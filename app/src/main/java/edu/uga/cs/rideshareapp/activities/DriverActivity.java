@@ -13,8 +13,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 import edu.uga.cs.rideshareapp.fragments.PostedRidesUserViewFragment;
 import edu.uga.cs.rideshareapp.fragments.ProfileFragment;
 import edu.uga.cs.rideshareapp.fragments.RequestsFragment;
@@ -22,13 +26,13 @@ import edu.uga.cs.rideshareapp.fragments.RequestsFragment;
 public class DriverActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
+    private TextView coinCount;
 
     private final Fragment requestsFragment = new RequestsFragment();
     private final Fragment ridesFragment = new PostedRidesUserViewFragment();
     private final Fragment profileFragment = new ProfileFragment();
 
     private Fragment currentFragment;
-
     private static final String SELECTED_TAB_KEY = "selected_tab_key";
 
     @Override
@@ -43,14 +47,13 @@ public class DriverActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_navigation1);
 
-        // Handle safe area padding
+        // Handle bottom nav insets (optional if needed)
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
             v.setPadding(0, 0, 0, bottomInset);
             return insets;
         });
 
-        // Add all fragments only once
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragment_container, profileFragment, "Profile").hide(profileFragment)
@@ -58,9 +61,8 @@ public class DriverActivity extends AppCompatActivity {
                     .add(R.id.fragment_container, requestsFragment, "Requests")
                     .commit();
             currentFragment = requestsFragment;
-            bottomNavigationView.setSelectedItemId(R.id.nav_requests); // default tab
+            bottomNavigationView.setSelectedItemId(R.id.nav_requests);
         } else {
-            // After rotation, restore the correct current fragment
             String selectedTab = savedInstanceState.getString(SELECTED_TAB_KEY);
             if ("Profile".equals(selectedTab)) {
                 currentFragment = profileFragment;
@@ -95,13 +97,51 @@ public class DriverActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        updateCoinsDisplay(); // ✅ Added after setting up everything
+    }
+
+    private void updateCoinsDisplay() {
+        CoinsManager.listenForCoins(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Integer coins = snapshot.getValue(Integer.class);
+                if (coinCount != null) {
+                    if (coins == null || coins == 0) {
+                        coinCount.setText("no coins");
+                    } else {
+                        coinCount.setText(String.valueOf(coins));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Optional error handling
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.top_bar_menu, menu);
+
+        MenuItem coinItem = menu.findItem(R.id.action_coins);
+        View actionView = coinItem.getActionView();
+        coinCount = actionView.findViewById(R.id.coin_count);
+
+        updateCoinsDisplay(); // fetch coins when menu created
+
+        actionView.setOnClickListener(v -> {
+            updateCoinsDisplay(); // manual refresh on clicking coin
+        });
+
+        return true;
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-
-        // Save which fragment is active
         if (currentFragment == profileFragment) {
             outState.putString(SELECTED_TAB_KEY, "Profile");
         } else if (currentFragment == ridesFragment) {
@@ -114,23 +154,6 @@ public class DriverActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
-        return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.top_bar_menu, menu);
-
-        MenuItem coinItem = menu.findItem(R.id.action_coins);
-        View actionView = coinItem.getActionView();
-        TextView coinCount = actionView.findViewById(R.id.coin_count);
-
-        coinCount.setText("100");
-
-        actionView.setOnClickListener(v -> {
-            // Optional: Show toast or navigate to coin history
-        });
-
         return true;
     }
 }

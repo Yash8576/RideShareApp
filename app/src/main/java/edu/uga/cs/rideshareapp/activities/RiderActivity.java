@@ -13,16 +13,27 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import edu.uga.cs.rideshareapp.R;
+import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 import edu.uga.cs.rideshareapp.fragments.PostedRequestsUserViewFragment;
-import edu.uga.cs.rideshareapp.fragments.PostedRidesUserViewFragment;
 import edu.uga.cs.rideshareapp.fragments.ProfileFragment;
 import edu.uga.cs.rideshareapp.fragments.RidesFragment;
 
 public class RiderActivity extends AppCompatActivity {
 
-    BottomNavigationView bottomNavigationView;
+    private BottomNavigationView bottomNavigationView;
+    private TextView coinCount;
+
+    private final Fragment ridesFragment = new RidesFragment();
+    private final Fragment requestsFragment = new PostedRequestsUserViewFragment();
+    private final Fragment profileFragment = new ProfileFragment();
+
+    private Fragment currentFragment;
+    private static final String SELECTED_TAB_KEY = "selected_tab_key";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,77 +41,119 @@ public class RiderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_rider);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back arrow
-            getSupportActionBar().setDisplayShowTitleEnabled(false); // hide title
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
         bottomNavigationView = findViewById(R.id.bottom_navigation2);
 
-        // Handle safe area (bottom padding for nav bar)
+        // Handle safe area padding (optional)
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
             v.setPadding(0, 0, 0, bottomInset);
             return insets;
         });
 
-        // Handle bottom nav selection
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment fragment = null;
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragment_container, profileFragment, "Profile").hide(profileFragment)
+                    .add(R.id.fragment_container, ridesFragment, "Rides").hide(ridesFragment)
+                    .add(R.id.fragment_container, requestsFragment, "Requests")
+                    .commit();
+            currentFragment = ridesFragment;
+            bottomNavigationView.setSelectedItemId(R.id.nav_rides);
+        } else {
+            String selectedTab = savedInstanceState.getString(SELECTED_TAB_KEY);
+            if ("Profile".equals(selectedTab)) {
+                currentFragment = profileFragment;
+                bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+            } else if ("Requests".equals(selectedTab)) {
+                currentFragment = requestsFragment;
+                bottomNavigationView.setSelectedItemId(R.id.nav_post_request);
+            } else {
+                currentFragment = ridesFragment;
+                bottomNavigationView.setSelectedItemId(R.id.nav_rides);
+            }
+        }
 
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
             int itemId = item.getItemId();
             if (itemId == R.id.nav_rides) {
-                fragment = new RidesFragment();
+                selectedFragment = ridesFragment;
             } else if (itemId == R.id.nav_post_request) {
-                fragment = new PostedRequestsUserViewFragment();
+                selectedFragment = requestsFragment;
             } else if (itemId == R.id.nav_profile) {
-                fragment = new ProfileFragment();
+                selectedFragment = profileFragment;
             }
 
-            if (fragment != null) {
-                loadFragment(fragment);
+            if (selectedFragment != null && selectedFragment != currentFragment) {
+                getSupportFragmentManager().beginTransaction()
+                        .hide(currentFragment)
+                        .show(selectedFragment)
+                        .commit();
+                currentFragment = selectedFragment;
                 return true;
             }
             return false;
         });
 
-        // ✅ Only set default selected tab if fresh launch (not during rotation)
-        if (savedInstanceState == null) {
-            bottomNavigationView.setSelectedItemId(R.id.nav_rides);
-        }
+        updateCoinsDisplay(); // ✅ Fetch initial coins
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed(); // handles back navigation
-        return true;
-    }
+    private void updateCoinsDisplay() {
+        CoinsManager.listenForCoins(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Integer coins = snapshot.getValue(Integer.class);
+                if (coinCount != null) {
+                    if (coins == null || coins == 0) {
+                        coinCount.setText("no coins");
+                    } else {
+                        coinCount.setText(String.valueOf(coins));
+                    }
+                }
+            }
 
-    private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Optional error handling
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.top_bar_menu, menu);
 
-        // Get the action view of the menu item
         MenuItem coinItem = menu.findItem(R.id.action_coins);
         View actionView = coinItem.getActionView();
+        coinCount = actionView.findViewById(R.id.coin_count);
 
-        // Find the TextView inside the custom layout
-        TextView coinCount = actionView.findViewById(R.id.coin_count);
+        updateCoinsDisplay(); // fetch coins when menu created
 
-        // Set default or dynamic value
-        coinCount.setText("100");
-
-        // Optional click handler for coin icon
         actionView.setOnClickListener(v -> {
-            // Future: open coin history or show toast
+            updateCoinsDisplay(); // manual refresh if user clicks coin
         });
 
+        return true;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (currentFragment == profileFragment) {
+            outState.putString(SELECTED_TAB_KEY, "Profile");
+        } else if (currentFragment == requestsFragment) {
+            outState.putString(SELECTED_TAB_KEY, "Requests");
+        } else {
+            outState.putString(SELECTED_TAB_KEY, "Rides");
+        }
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
         return true;
     }
 }
