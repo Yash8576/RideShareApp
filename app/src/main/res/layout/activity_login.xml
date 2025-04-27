@@ -1,111 +1,99 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     tools:context=".activities.LoginActivity">
 
-    <!-- Outer container that helps center content -->
-    <LinearLayout
+    <!-- Background faded -->
+    <ImageView
+        android:id="@+id/bgImageLogin"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:src="@drawable/login_img"
+        android:scaleType="centerCrop"
+        android:alpha="0.3" />
 
-        <EditText
-            android:id="@+id/editTextText"
+    <!-- Main scrollable content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:background="@android:color/transparent"
-            android:clickable="false"
-            android:cursorVisible="false"
-            android:focusable="false"
-            android:gravity="center"
-            android:inputType="none"
-            android:text="🚘 DawgRide "
-            android:textAlignment="center"
-            android:textColor="@android:color/holo_red_dark"
-            android:textSize="40sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:gravity="center_horizontal">
 
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="match_parent"
-            android:layout_height="350dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="Login Image"
-            android:scaleType="centerCrop"
-            android:src="@drawable/login_img" />
+            <TextView
+                android:id="@+id/textViewTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:text="🚘 DawgRide"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:layout_marginTop="32dp" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:src="@drawable/sad_dawg"
+                android:layout_marginTop="16dp"/>
 
             <EditText
                 android:id="@+id/loginMail"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:drawableStart="@drawable/email"
                 android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:minHeight="48dp"
-                android:padding="10dp"
-                android:textSize="24sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:textSize="18sp"
+                android:drawableStart="@drawable/email"
+                android:padding="12dp"
+                android:layout_marginTop="32dp" />
 
             <EditText
                 android:id="@+id/loginPassword"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:drawableStart="@drawable/lock"
                 android:hint="Password"
                 android:inputType="textPassword"
                 android:minHeight="48dp"
-                android:padding="10dp"
-                android:textSize="24sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/loginMail" />
+                android:textSize="18sp"
+                android:drawableStart="@drawable/lock"
+                android:padding="12dp"
+                android:layout_marginTop="16dp" />
 
             <Button
                 android:id="@+id/loginMailButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
                 android:backgroundTint="@android:color/holo_red_light"
                 android:text="Login"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/loginPassword" />
+                android:layout_marginTop="24dp" />
 
             <TextView
                 android:id="@+id/textViewSignup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="47dp"
+                android:layout_marginTop="32dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
                 android:minHeight="48dp"
                 android:text="Not registered yet? Sign up here"
                 android:textColor="@android:color/holo_blue_dark"
-                android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/loginMailButton" />
+                android:textSize="18sp" />
 
+        </LinearLayout>
+    </ScrollView>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </LinearLayout>
-</ScrollView>
+</FrameLayout>

@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -11,9 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -29,14 +28,15 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        // ✅ REMOVE the App Bar before setting content view
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getSupportActionBar().hide();  // hide support action bar (toolbar)
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.login), (view, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        // ✅ Make full screen by hiding system bars too
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.loginMailButton);
         signUpText = findViewById(R.id.textViewSignup);
 
-        // ➕ Sign Up redirect
+        // ➕ Redirect to Sign Up
         signUpText.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
         });
@@ -56,7 +56,7 @@ public class LoginActivity extends AppCompatActivity {
             String email = emailEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
 
-            // ✅ Validations
+            // ✅ Basic validation
             if (!isValidEmail(email)) {
                 Toast.makeText(this, "Enter a valid email", Toast.LENGTH_SHORT).show();
                 return;
@@ -67,12 +67,11 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            // 🔄 Firebase sign-in
+            // 🔄 Firebase login
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
-
                             Toast.makeText(this, "Welcome back, " + user.getEmail(), Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(LoginActivity.this, SelectionActivity.class));
                             finish();
@@ -83,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // 📧 Must be a valid email
+    // 📧 Valid email check
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
