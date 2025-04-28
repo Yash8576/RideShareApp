@@ -75,6 +75,14 @@ public class RequestsFragment extends Fragment {
                                 requestList.add(request);
                             }
                         }
+
+                        // ✅ Sort by (date + time)
+                        requestList.sort((r1, r2) -> {
+                            String datetime1 = r1.date + " " + r1.time;
+                            String datetime2 = r2.date + " " + r2.time;
+                            return datetime1.compareTo(datetime2);
+                        });
+
                         adapter.notifyDataSetChanged();
                     }
 

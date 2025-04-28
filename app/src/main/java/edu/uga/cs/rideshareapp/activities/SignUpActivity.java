@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.regex.Pattern;
+
 import edu.uga.cs.rideshareapp.R;
 import edu.uga.cs.rideshareapp.adapters.CoinsManager;
 
@@ -29,30 +31,26 @@ public class SignUpActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // 🔥 Request no title bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getSupportActionBar().hide();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        // 🔥 Full screen flags to cover everything (no safe area restrictions)
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.sign_up_scroll), (view, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            view.setPadding(0, 0, 0, 0); // ✅ no padding at all
+            view.setPadding(0, 0, 0, 0);
             return insets;
         });
 
         mAuth = FirebaseAuth.getInstance();
 
-        // Bind views
         emailEditText = findViewById(R.id.signUpMail);
         passwordEditText = findViewById(R.id.signUpPassword);
         signUpButton = findViewById(R.id.signUpMailButton);
 
-        // SignUp button logic
         signUpButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
@@ -62,18 +60,15 @@ public class SignUpActivity extends AppCompatActivity {
                 return;
             }
 
-            if (password.length() < 6) {
-                Toast.makeText(SignUpActivity.this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            if (!isStrongPassword(password)) {
+                Toast.makeText(SignUpActivity.this, "Password must have 6+ characters, including uppercase, lowercase, number, and symbol", Toast.LENGTH_LONG).show();
                 return;
             }
 
-            // 🔥 Firebase sign-up
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            // ✅ Award 50 coins after signup
                             CoinsManager.initializeCoinsIfNeeded(SignUpActivity.this);
-
                             Toast.makeText(SignUpActivity.this, "Sign up successful! 50 coins awarded!", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(SignUpActivity.this, SelectionActivity.class));
                             finish();
@@ -86,5 +81,19 @@ public class SignUpActivity extends AppCompatActivity {
 
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private boolean isStrongPassword(String password) {
+        // ✅ At least 6 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special char
+        Pattern PASSWORD_PATTERN = Pattern.compile(
+                "^" +
+                        "(?=.*[0-9])" +         // at least one digit
+                        "(?=.*[a-z])" +         // at least one lowercase letter
+                        "(?=.*[A-Z])" +         // at least one uppercase letter
+                        "(?=.*[@#$%^&+=!])" +   // at least one special character
+                        ".{6,}" +               // at least 6 characters
+                        "$"
+        );
+        return PASSWORD_PATTERN.matcher(password).matches();
     }
 }

@@ -86,6 +86,7 @@ public class MyRidesFragment extends Fragment {
                             String riderEmail = snap.child("riderEmail").getValue(String.class);
 
                             if (driverEmail == null || riderEmail == null) continue;
+
                             if (!(currentUserEmail.equals(driverEmail) || currentUserEmail.equals(riderEmail))) continue;
 
                             String from = snap.child("from").getValue(String.class);
@@ -124,6 +125,13 @@ public class MyRidesFragment extends Fragment {
                             myRides.add(ride);
                             rideKeys.add(snap.getKey());
                         }
+
+                        // ✅ SORT accepted rides by (date + time)
+                        myRides.sort((r1, r2) -> {
+                            String datetime1 = r1.date + " " + r1.time;
+                            String datetime2 = r2.date + " " + r2.time;
+                            return datetime1.compareTo(datetime2);
+                        });
 
                         adapter.notifyDataSetChanged();
                     }

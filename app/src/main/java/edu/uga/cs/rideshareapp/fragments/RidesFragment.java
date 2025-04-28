@@ -74,6 +74,14 @@ public class RidesFragment extends Fragment {
                                 rideList.add(ride);
                             }
                         }
+
+                        // ✅ SORT by (date + time) ascending (soonest first)
+                        rideList.sort((r1, r2) -> {
+                            String datetime1 = r1.date + " " + r1.time;
+                            String datetime2 = r2.date + " " + r2.time;
+                            return datetime1.compareTo(datetime2); // earliest first
+                        });
+
                         adapter.notifyDataSetChanged();
                     }
 
