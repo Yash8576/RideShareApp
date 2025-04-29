@@ -29,7 +29,7 @@ public class CoinsManager {
         }
     }
 
-    // Listen continuously for coins updates (optional use)
+    // Listen continuously for coins updates
     public static void listenForCoins(ValueEventListener listener) {
         FirebaseUser user = getCurrentUser();
         if (user != null) {

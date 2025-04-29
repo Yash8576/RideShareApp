@@ -47,7 +47,7 @@ public class RiderActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_navigation2);
 
-        // Handle safe area padding (optional)
+
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, insets) -> {
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
             v.setPadding(0, 0, 0, bottomInset);

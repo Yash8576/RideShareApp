@@ -92,10 +92,10 @@ public class MyRideAdapter extends RecyclerView.Adapter<MyRideAdapter.RideViewHo
                                 if (driverUid != null && riderUid != null) {
                                     CoinsManager.handleCoinsWhenRideConfirmed(driverUid, riderUid);
 
-                                    // 🛑 Remove the ride from database
+                                    // Remove the ride from database
                                     snapshot.getRef().removeValue();
 
-                                    // 🔥 Remove from adapter list
+                                    // Remove from adapter list
                                     int adapterPosition = holder.getAdapterPosition();
                                     if (adapterPosition != RecyclerView.NO_POSITION) {
                                         myRideList.remove(adapterPosition);

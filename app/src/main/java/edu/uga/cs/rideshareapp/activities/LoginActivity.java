@@ -28,14 +28,14 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        // ✅ REMOVE the App Bar before setting content view
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
 
         setContentView(R.layout.activity_login);
 
-        // ✅ Make full screen by hiding system bars too
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
         mAuth = FirebaseAuth.getInstance();
@@ -49,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // UI Components
+
         emailEditText = findViewById(R.id.loginMail);
         passwordEditText = findViewById(R.id.loginPassword);
         loginButton = findViewById(R.id.loginMailButton);
